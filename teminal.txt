@@ -6,7 +6,7 @@ echo "R_LIBS_USER=~/R/goolf/4.3" > ~/.Renviron
 
 module spider goolf # to find avail version
 
-$module load goolf/9.2.0_3.1.6  R
+$module load goolf/11.4.0_4.1.4 R
 $R
 .libPaths()
 list.of.packages <- c("dplyr",
