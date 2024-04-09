@@ -106,7 +106,7 @@ sjob = slurm_map(
   #The slurm options is where you specify the time, as well as our lab account
   #The partition should be usually set to standard.
   slurm_options =
-    c(account = "netlab", partition = "parallel", time = "2:00:00"), # standard
+    c(account = "netlab", partition = "standard", time = "2:00:00"), # standard
   #This line is vitally important: It imports all functions you have in your environment
   #Because you've sourced your SimFunction file, you should have all necessary functions
   #In the environment.
