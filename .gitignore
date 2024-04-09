@@ -1,0 +1,9 @@
+# Ignore a specific file
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.RDS
+
+# Ignore all files in a directory
+res/*
