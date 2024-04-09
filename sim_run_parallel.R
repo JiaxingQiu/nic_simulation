@@ -34,8 +34,7 @@ simulation_conditions$id <- seq(1:nrow(param_grid))
 simulation_conditions$iter <- 100
 
 #This function runs each condition (i.e. each row in the simulation condition data.frame)
-# for test:
-sim_condition = simulation_conditions[which(simulation_conditions$id==1),]
+# for test:sim_condition = simulation_conditions[which(simulation_conditions$id==1),]
 
 run_wrapper <- function(sim_condition) {
   results_list = list()
