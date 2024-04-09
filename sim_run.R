@@ -1,9 +1,23 @@
-# rm(list = ls())
 # setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
-#Import libraries and source additional functions
+rm(list = ls())
+
 library(dplyr)
 library(rslurm)
+library(Matrix)
+library(lme4)
+library(MASS)
+
+
+list.of.packages <- c("dplyr",
+                      "rslurm",
+                      "MASS",
+                      "lme4",
+                      "Matrix")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages, lib = "/sfs/qumulo/qhome/jq2uw/R/goolf/9.2")
+
+
 
 source("./sim_functions.R")
 path = paste0("./nic_utils")
