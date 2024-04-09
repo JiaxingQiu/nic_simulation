@@ -1,9 +1,10 @@
 # Ignore a specific file
-.Rproj.user
 .Rhistory
-.RData
-.Ruserdata
-.RDS
+.DS_Store
 
 # Ignore all files in a directory
 res/*
+
+# Ignore all files with a specific extension
+*.RData
+*.RDS
