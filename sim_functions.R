@@ -1,0 +1,196 @@
+
+# generate AR(1) series
+generate_ar1 <- function(n, phi, sigma) {
+  # phi = how strong is the autocorrelation
+  e <- rnorm(n, mean = 0, sd = sigma) # Generate white noise
+  Y <- rep(0, n) # Placeholder for the AR(1) process
+  Y[1] <- e[1] # Initial value
+  for (t in 2:n) { Y[t] <- phi * Y[t - 1] + e[t]}
+  return(Y)
+}
+
+# data generating process
+generate_data <- function(n_cluster,
+                          n_obs_per_cluster,
+                          n_ttl_betas, 
+                          fix_rdm_ratio) {
+  library(dplyr)
+  library(MASS)
+  # note: intercepts will be allowed in random effects, all random effects will be in fixed effects as well
+  
+  sigma_x <- 1
+  sigma_beta <- 10
+  sigma_b <- 3
+  
+  # cluster id
+  cid_df <- data.frame(cluster = rep(1:n_cluster, each = n_obs_per_cluster))
+  
+  # generate fixed effect data
+  n_fix_betas <- ceiling(n_ttl_betas*fix_rdm_ratio)
+  fix_x_ls <- list()
+  for(i in 1:n_fix_betas){
+    fix_x_ls[[i]] <- rnorm(n_cluster * n_obs_per_cluster, 0, sigma_x)
+  }
+  fix_x_df <- as.data.frame(fix_x_ls)
+  colnames(fix_x_df) <- paste0("fix",c(1:ncol(fix_x_df)))
+  fix_x_df$fix_itc <- 1
+  
+  # generate random effect data by AR(1)
+  rdm_x_df <- NULL
+  n_rdm_betas <- n_ttl_betas - n_fix_betas
+  if(n_rdm_betas>0){
+    rdm_phi_vec_ls <- lapply(as.list(rep(n_rdm_betas, n_cluster)), function(n){runif(n, 0.9, 1)})  # vector of phi is generated from N(0, 5) around 1
+    rdm_x_df_ls <- lapply(rdm_phi_vec_ls, function(phis){
+      phis <- as.list(phis)
+      # x_ls <- lapply(phis, function(x) generate_ar1(n=n_obs_per_cluster, phi=x, sigma = 0.1)) # AR1(phi)
+      x_ls <- lapply(phis, function(x) generate_ar1(n=n_obs_per_cluster, phi=0, sigma=1)) # white noise
+      x_df <- data.frame(x_ls)
+      colnames(x_df) <- paste0("rdm",c(1:ncol(x_df)))
+      return(x_df)   } )
+    rdm_x_df <- bind_rows(rdm_x_df_ls)
+    rdm_x_df$rdm_itc <- 1
+  }
+  
+  
+  # generate fixed effects betas  
+  fix_betas_mat <- matrix(rnorm(ncol(fix_x_df), 0, sigma_beta), nrow = 1, ncol=ncol(fix_x_df)) # from multi-gaussian
+  
+  # generate clustered random effects betas
+  if(!is.null(rdm_x_df)){
+    # ---- within-clustaer random effects ----
+    # # from multi-uniform
+    # rdm_betas_mat_center <- runif(ncol(rdm_x_df), -5, 5)
+    # rdm_betas_mat <- c()
+    # for(i in 1:n_cluster){
+    #   rdm_betas_mat_error_i <- rnorm(ncol(rdm_x_df), 0, 0.1)
+    #   rdm_betas_mat_i <- t(replicate(n_obs_per_cluster, rdm_betas_mat_center + rdm_betas_mat_error_i))
+    #   rdm_betas_mat_i <- matrix(rdm_betas_mat_i, nrow=n_obs_per_cluster, ncol=ncol(rdm_x_df))
+    #   rdm_betas_mat <- rbind(rdm_betas_mat, rdm_betas_mat_i)
+    # }
+    # # from multi gaussian
+    rdm_betas_mat <- c()
+    rdm_betas_mat_i <- mvrnorm(n_cluster, rep(0,ncol(rdm_x_df)), diag(rep(sigma_b, ncol(rdm_x_df))))
+    rdm_betas_mat_i <- matrix(rdm_betas_mat_i, nrow=n_cluster, ncol=ncol(rdm_x_df))
+    rdm_betas_mat <- rdm_betas_mat_i[rep(1:nrow(rdm_betas_mat_i), each = n_obs_per_cluster),]
+    rdm_betas_mat <- matrix(rdm_betas_mat, nrow=n_cluster*n_obs_per_cluster, ncol=ncol(rdm_x_df))
+    
+    # ---- fixed effects from random effect variables as well (except intercept) -----
+    fix_rdm_x_df <- as.matrix(rdm_x_df[,setdiff(colnames(rdm_x_df),"rdm_itc")], nrow=nrow(rdm_x_df), ncol=length(setdiff(colnames(rdm_x_df),"rdm_itc")))
+    colnames(fix_rdm_x_df) <- paste0("fix_",setdiff(colnames(rdm_x_df),"rdm_itc"))
+    fix_rdm_betas_mat <- matrix(rnorm(ncol(fix_rdm_x_df), 0, sigma_beta), nrow = 1, ncol=ncol(fix_rdm_x_df)) # from multi-gaussian
+    
+  }
+  
+  # return betas and data
+  fix_betas_df <- as.data.frame(fix_betas_mat[rep(1:nrow(fix_betas_mat), each = n_cluster * n_obs_per_cluster),])
+  colnames(fix_betas_df) <- paste0("beta_",colnames(fix_x_df))
+  betas <- fix_betas_df
+  data <- fix_x_df
+  
+  if(!is.null(rdm_x_df)){
+    rdm_betas_df <- as.data.frame(rdm_betas_mat)
+    colnames(rdm_betas_df) <- paste0("beta_",colnames(rdm_x_df))
+    betas <- bind_cols(betas, rdm_betas_df)
+    data <- bind_cols(data, rdm_x_df)
+    
+    fix_rdm_betas_df <-  as.data.frame(fix_rdm_betas_mat[rep(1:nrow(fix_rdm_betas_mat), each = n_cluster * n_obs_per_cluster),])
+    colnames(fix_rdm_betas_df) <- paste0("beta_",colnames(fix_rdm_x_df))
+    betas <- bind_cols(betas, fix_rdm_betas_df)
+    data <- bind_cols(data, fix_rdm_x_df)
+  } 
+  stopifnot(dim(data)[1] == dim(betas)[1])
+  stopifnot(dim(data)[2] == dim(betas)[2])
+  
+  # returns
+  data <- as.matrix(data)
+  betas <- as.matrix(betas)
+  l <- as.numeric(rowSums(data * betas)) #+ rnorm(nrow(data), 0, residual_error)
+  p <- 1/(1+exp(-l))
+  y <- rbinom(length(p), 1, p)
+  c <- as.numeric(cid_df$cluster)
+  
+  # # y label group by c
+  # cluster_means <- tapply(y, c, mean)# Calculate the condition for each cluster
+  # cluster_conditions <- ifelse(cluster_means > 0.5, 1, 0)
+  # yy <- cluster_conditions[c]# Map the conditions back to each element
+  # yy <- as.numeric(yy)
+  
+  return(list("y"=y,#yy,
+              "p"=p,
+              "c"=c,
+              "data" = data,
+              "betas" = betas))
+}
+
+fit_glmer <- function(y, c, data){
+  library(Matrix)
+  library(lme4)
+  
+  df_mdl <- as.data.frame(data)
+  df_mdl$y <- y
+  df_mdl$c <- as.factor(c)
+  
+  fix_vars <- grep("^fix\\d+$", colnames(data), value = TRUE)
+  rdm_vars <- grep("^rdm\\d+$", colnames(data), value = TRUE)
+  model <- glmer(formula(paste0("y~", paste0(c(fix_vars, rdm_vars),collapse = "+"),
+                                "+",paste0(paste0("(0+",rdm_vars,"|c)"),collapse = "+"), "+ (1|c)" )), 
+                 data = df_mdl, family = binomial)
+  
+  return(model)
+}
+
+
+
+eval_glm <- function(y, c, data){
+  
+  df_mdl <- as.data.frame(data)
+  df_mdl$y <- y
+  df_mdl$c <- as.factor(c)
+  
+  fix_vars <- grep("^fix\\d+$", colnames(data), value = TRUE)
+  rdm_vars <- grep("^rdm\\d+$", colnames(data), value = TRUE)
+  fml <- formula(paste0("y~", paste0(c(fix_vars, rdm_vars),collapse = "+")))
+  mdl <- glm(fml, data = df_mdl, family = "binomial")
+  mdl$c <- c
+  
+  # information criteria
+  deviance <- NIC(mdl)$dev
+  nic <- NIC(mdl)$nic
+  aic <- NIC(mdl)$aic
+  bic <- BIC(mdl)
+  
+  # loo auc and loo deviance
+  y_prob <- c()
+  y_true <- c()
+  for (f_sub in unique(df_mdl$c)){
+    mdl_sub <- glm(fml, family = "binomial", data = df_mdl[!df_mdl$c==f_sub,])
+    y_prob <- c(y_prob, predict(mdl_sub, type = "response",
+                                newdata = df_mdl[df_mdl$c==f_sub,]))
+    y_true <- c(y_true, df_mdl[df_mdl$c==f_sub,"y"])
+  }
+  looAUC <- as.numeric(pROC::auc(pROC::roc(response = y_true, predictor = y_prob)))
+  looDeviance <- -2*sum(y_true * log(y_prob) + (1 - y_true) * log(1 - y_prob), na.rm = TRUE)
+  
+  return(list("mdl"=mdl,
+              "aic"=aic,
+              "nic"=nic,
+              "bic"=bic,
+              "deviance"=deviance,
+              "looAUC" = looAUC,
+              "looDeviance" = looDeviance))
+}
+
+
+calculate_bias <- function(res, m0, m1){
+  fix_effect_betas <- c(grep("^beta_fix_itc$", colnames(res$betas), value = TRUE),
+                        grep("^beta_fix\\d+$", colnames(res$betas), value = TRUE),
+                        grep("^beta_fix_rdm\\d+$", colnames(res$betas), value = TRUE) )
+  fix_effect_betas <- unique(res$betas[,fix_effect_betas])
+  bias0 <- sum((coef(summary(m0))[,"Estimate"] - fix_effect_betas)^2)/length(fix_effect_betas)
+  bias1 <- sum((coef(m1$mdl) - fix_effect_betas)^2)/length(fix_effect_betas)
+  
+  return(list(bias0 = bias0,
+              bias1 = bias1))
+}
+
+
