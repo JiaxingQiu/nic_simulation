@@ -1,5 +1,5 @@
-rm(list = ls())
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+# rm(list = ls())
+# setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 #Import libraries and source additional functions
 library(dplyr)
