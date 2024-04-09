@@ -1,31 +1,18 @@
-# setwd(dirname(rstudioapi::getSourceEditorContext()$path))
-
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rm(list = ls())
 
 library(dplyr)
-library(rslurm)
 library(Matrix)
 library(lme4)
 library(MASS)
-library(pROC)
-
-list.of.packages <- c("dplyr",
-                      "rslurm",
-                      "MASS",
-                      "lme4",
-                      "Matrix",
-                      "pROC")
-new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-if(length(new.packages)) install.packages(new.packages, lib = "/sfs/qumulo/qhome/jq2uw/R/goolf/4.3")
-
+library(foreach)
+library(doParallel)
 
 
 source("./sim_functions.R")
 path = paste0("./nic_utils")
 flst = list.files( path)
 sapply(c(paste(path,flst,sep="/")), source, .GlobalEnv)
-
-
 
 
 # Parameters
@@ -92,35 +79,22 @@ run_wrapper <- function(sim_condition) {
   return(toReturn)
 }
 
-#This function actually runs the whole simulation study by deploying it to the SLURM cluster
-sjob = slurm_map(
-  #The use of split here breaks the simulation conditions into a list of rows
-  #so it can be used by slurm_map
-  split(simulation_conditions, simulation_conditions$id),
-  run_wrapper,
-  ###From here to the next comment are control parameters, you will likely not change these
-  nodes=nrow(simulation_conditions),
-  cpus_per_node = 1,
-  submit = TRUE,
-  preschedule_cores = F,
-  #The slurm options is where you specify the time, as well as our lab account
-  #The partition should be usually set to standard.
-  slurm_options =
-    c(account = "netlab", partition = "parallel", time = "2:00:00"), # standard
-  #This line is vitally important: It imports all functions you have in your environment
-  #Because you've sourced your SimFunction file, you should have all necessary functions
-  #In the environment.
-  global_objects = lsf.str()
-)
-
-
-#This saves the sjob object, if you don't save it, you can't easily pull out the results
-save(sjob, file = "nic_simulation_run.Rdata")
-
-
-#You run these lines after your simulation is complete.
-load("nic_simulation_run.Rdata")
-output = get_slurm_out(sjob, outtype = "table")
+# Detect the number of cores
+numCores <- detectCores() - 2  # Leave two cores free
+registerDoParallel(cores=numCores)
+# Pre-calculate the row indices for each batch of 10
+row_indices <- split(c(1:nrow(simulation_conditions)), ceiling(seq_along(1:nrow(simulation_conditions))/10))
+# Iterate through each batch of indices
+for (bn in names(row_indices) ) {
+  if(!file.exists(paste0("./res/result_batch",bn,".RDS"))){
+    batch_indices <- row_indices[[bn]]
+    # Use foreach to run simulations in parallel for the current batch of rows
+    results <- foreach(i = batch_indices, .packages = c("pROC", "dplyr", "lme4", "MASS", "Matrix")) %dopar% {
+      run_wrapper(simulation_conditions[i,])
+    }
+    saveRDS(results, paste0("./res/result_batch",bn,".RDS"))
+  }
+}
 
 
 
