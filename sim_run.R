@@ -30,8 +30,8 @@ sapply(c(paste(path,flst,sep="/")), source, .GlobalEnv)
 
 # Parameters
 n_cluster <- c(50, 100) # number of clusters
-n_obs_per_cluster <- c(5, 10, 30, 50, 100) # number of observations per cluster
-n_ttl_betas <- seq(3,15) # number of total effects
+n_obs_per_cluster <- c(5, 10, 30, 50, 80) # number of observations per cluster
+n_ttl_betas <- seq(3, 15) # number of total effects
 fix_rdm_ratio <- c(0.2, 0.5, 0.8) # proportion of fix effects
 # residual_error <- c(0.5, 1)#, 3) # residual error
 
@@ -105,7 +105,7 @@ sjob = slurm_map(
   #The slurm options is where you specify the time, as well as our lab account
   #The partition should be usually set to standard.
   slurm_options =
-    c(account = "netlab", partition = "standard", time = "2:00:00"), # standard
+    c(account = "netlab", partition = "standard", time = "3:00:00"), # standard
   #This line is vitally important: It imports all functions you have in your environment
   #Because you've sourced your SimFunction file, you should have all necessary functions
   #In the environment.
