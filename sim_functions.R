@@ -13,14 +13,16 @@ generate_ar1 <- function(n, phi, sigma) {
 generate_data <- function(n_cluster,
                           n_obs_per_cluster,
                           n_ttl_betas, 
-                          fix_rdm_ratio) {
+                          fix_rdm_ratio,
+                          sigma_fix,
+                          sigma_rdm_fix_ratio) {
   library(dplyr)
   library(MASS)
   # note: intercepts will be allowed in random effects, all random effects will be in fixed effects as well
   
   sigma_x <- 1
-  sigma_beta <- 10
-  sigma_b <- 3
+  sigma_beta <- sigma_fix
+  sigma_b <- sigma_fix * sigma_rdm_fix_ratio
   
   # cluster id
   cid_df <- data.frame(cluster = rep(1:n_cluster, each = n_obs_per_cluster))
