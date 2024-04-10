@@ -17,7 +17,7 @@ sapply(c(paste(path,flst,sep="/")), source, .GlobalEnv)
 
 # Parameters
 n_cluster <- c(50, 100) # number of clusters
-n_obs_per_cluster <- c(5, 10, 50) # number of observations per cluster
+n_obs_per_cluster <- c(5, 10, 30, 50, 100) # number of observations per cluster
 n_ttl_betas <- seq(3,15) # number of total effects
 fix_rdm_ratio <- c(0.2, 0.5, 0.8) # proportion of fix effects
 # residual_error <- c(0.5, 1)#, 3) # residual error
