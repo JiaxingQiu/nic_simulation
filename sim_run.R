@@ -104,7 +104,7 @@ sjob = slurm_map(
 
 
 #This saves the sjob object, if you don't save it, you can't easily pull out the results
-save(sjob, file = "nic_simulation_run.Rdata")
+save(sjob, file = "nic_simulation_run_2day.Rdata")
 
 
 #You run these lines after your simulation is complete.
