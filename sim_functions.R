@@ -160,6 +160,8 @@ eval_glm <- function(y, c, data){
   nic <- NIC(mdl)$nic
   aic <- NIC(mdl)$aic
   bic <- BIC(mdl)
+  vcov <- vcov.robust(mdl, cluster = c)$vcov
+  
   
   # loo auc and loo deviance
   y_prob <- c()
@@ -179,7 +181,8 @@ eval_glm <- function(y, c, data){
               "bic"=bic,
               "deviance"=deviance,
               "looAUC" = looAUC,
-              "looDeviance" = looDeviance))
+              "looDeviance" = looDeviance,
+              "vcov" = vcov))
 }
 
 
@@ -191,8 +194,25 @@ calculate_bias <- function(res, m0, m1){
   bias0 <- sum((coef(summary(m0))[,"Estimate"] - fix_effect_betas)^2)/length(fix_effect_betas)
   bias1 <- sum((coef(m1$mdl) - fix_effect_betas)^2)/length(fix_effect_betas)
   
+  
   return(list(bias0 = bias0,
               bias1 = bias1))
 }
+
+calculate_se_accuracy <- function(res, m0, m1){
+  fix_effect_betas <- c(grep("^beta_fix_itc$", colnames(res$betas), value = TRUE),
+                        grep("^beta_fix\\d+$", colnames(res$betas), value = TRUE),
+                        grep("^beta_fix_rdm\\d+$", colnames(res$betas), value = TRUE) )
+  fix_effect_betas <- unique(res$betas[,fix_effect_betas])
+  se_ratio0 <- mean(abs(coef(summary(m0))[,"Estimate"] - fix_effect_betas)/coef(summary(m0))[,"Std. Error"])
+  se_ratio1 <- mean(abs(coef(m1$mdl) - fix_effect_betas)/sqrt(diag(m1$vcov)))
+  
+  return(list(se_ratio0 = se_ratio0,
+              se_ratio1 = se_ratio1))
+  
+}
+
+
+
 
 
