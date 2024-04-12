@@ -1,6 +1,6 @@
 
 # generate AR(1) series
-generate_ar1 <- function(n, phi, sigma) {
+generate_ar1 <- function(n, phi, sigma=1) {
   # phi = how strong is the autocorrelation
   e <- rnorm(n, mean = 0, sd = sigma) # Generate white noise
   Y <- rep(0, n) # Placeholder for the AR(1) process
@@ -9,13 +9,28 @@ generate_ar1 <- function(n, phi, sigma) {
   return(Y)
 }
 
+
+random_removal <- function(c, cluster_na_rate) {
+  remaining_indices <- integer(0)
+  for (i in unique(c)) {
+    cluster_indices <- which(c == i)
+    num_remove <- ceiling(length(cluster_indices) * cluster_na_rate[i])
+    remove_indices <- sample(cluster_indices, num_remove)
+    keep_indices <- setdiff(cluster_indices, remove_indices)
+    remaining_indices <- c(remaining_indices, keep_indices)
+  }
+  return(sort(remaining_indices))
+}
+
 # data generating process
 generate_data <- function(n_cluster,
                           n_obs_per_cluster,
                           n_ttl_betas, 
                           fix_rdm_ratio,
                           sigma_fix,
-                          sigma_rdm_fix_ratio) {
+                          sigma_rdm_fix_ratio,
+                          ar1_phi,
+                          na_rate) {
   library(dplyr)
   library(MASS)
   # note: intercepts will be allowed in random effects, all random effects will be in fixed effects as well
@@ -41,11 +56,11 @@ generate_data <- function(n_cluster,
   rdm_x_df <- NULL
   n_rdm_betas <- n_ttl_betas - n_fix_betas
   if(n_rdm_betas>0){
-    rdm_phi_vec_ls <- lapply(as.list(rep(n_rdm_betas, n_cluster)), function(n){runif(n, 0.9, 1)})  # vector of phi is generated from N(0, 5) around 1
+    rdm_phi_vec_ls <- lapply(as.list(rep(n_rdm_betas, n_cluster)), function(n){runif(n, ar1_phi, ar1_phi+0.2)})  
     rdm_x_df_ls <- lapply(rdm_phi_vec_ls, function(phis){
       phis <- as.list(phis)
-      # x_ls <- lapply(phis, function(x) generate_ar1(n=n_obs_per_cluster, phi=x, sigma = 0.1)) # AR1(phi)
-      x_ls <- lapply(phis, function(x) generate_ar1(n=n_obs_per_cluster, phi=0, sigma=1)) # white noise
+      x_ls <- lapply(phis, function(x) generate_ar1(n=n_obs_per_cluster, phi=x)) # AR1(phi)
+      # x_ls <- lapply(phis, function(x) generate_ar1(n=n_obs_per_cluster, phi=ar1_phi)) # white noise
       x_df <- data.frame(x_ls)
       colnames(x_df) <- paste0("rdm",c(1:ncol(x_df)))
       return(x_df)   } )
@@ -103,13 +118,27 @@ generate_data <- function(n_cluster,
   stopifnot(dim(data)[1] == dim(betas)[1])
   stopifnot(dim(data)[2] == dim(betas)[2])
   
-  # returns
+  # returns complete
   data <- as.matrix(data)
   betas <- as.matrix(betas)
   l <- as.numeric(rowSums(data * betas)) #+ rnorm(nrow(data), 0, residual_error)
   p <- 1/(1+exp(-l))
   y <- rbinom(length(p), 1, p)
   c <- as.numeric(cid_df$cluster)
+  
+  # cluster-wise missing at random
+  if(na_rate>0){
+    cluster_na_rate <- rnorm(n_cluster, na_rate, 0.1)
+    cluster_na_rate[cluster_na_rate>0.8] <- 0.8
+    cluster_na_rate[cluster_na_rate<0] <- 0
+    remaining_indices <- random_removal(c, cluster_na_rate)
+    data <- data[remaining_indices, ]
+    betas <- betas[remaining_indices, ]
+    p <- p[remaining_indices]
+    y <- y[remaining_indices]
+    c <- c[remaining_indices] 
+  }
+  
   
   # # y label group by c
   # cluster_means <- tapply(y, c, mean)# Calculate the condition for each cluster
@@ -137,7 +166,6 @@ fit_glmer <- function(y, c, data){
   model <- glmer(formula(paste0("y~", paste0(c(fix_vars, rdm_vars),collapse = "+"),
                                 "+",paste0(paste0("(0+",rdm_vars,"|c)"),collapse = "+"), "+ (1|c)" )), 
                  data = df_mdl, family = binomial)
-  
   return(model)
 }
 
@@ -204,7 +232,7 @@ calculate_se_accuracy <- function(res, m0, m1){
                         grep("^beta_fix\\d+$", colnames(res$betas), value = TRUE),
                         grep("^beta_fix_rdm\\d+$", colnames(res$betas), value = TRUE) )
   fix_effect_betas <- unique(res$betas[,fix_effect_betas])
-  se_ratio0 <- mean(abs(coef(summary(m0))[,"Estimate"] - fix_effect_betas)/coef(summary(m0))[,"Std. Error"])
+  se_ratio0 <- mean(abs(coef(summary(m0))[,"Estimate"] - fix_effect_betas)/ sqrt(diag(vcov(m0)))) #coef(summary(m0))[,"Std. Error"])
   se_ratio1 <- mean(abs(coef(m1$mdl) - fix_effect_betas)/sqrt(diag(m1$vcov)))
   
   return(list(se_ratio0 = se_ratio0,

@@ -47,3 +47,16 @@ summary(model)
 
 mdl <- glm(y ~ fix1 + rdm1 + rdm2, data=df_mdl, family = "binomial")
 summary(mdl)
+
+
+
+n_cluster = sim_condition$n_cluster
+n_obs_per_cluster= sim_condition$n_obs_per_cluster
+n_ttl_betas= sim_condition$n_ttl_betas
+fix_rdm_ratio= sim_condition$fix_rdm_ratio
+sigma_fix = sim_condition$sigma_fix
+sigma_rdm_fix_ratio = sim_condition$sigma_rdm_fix_ratio
+ar1_phi_min = sim_condition$ar1_phi_min
+na_rate = sim_condition$na_rate
+
+

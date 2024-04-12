@@ -29,7 +29,7 @@ source("./sim_conditions.R")
 
 
 #This function runs each condition (i.e. each row in the simulation condition data.frame)
-# for test: sim_condition = simulation_conditions[which(simulation_conditions$id==100),]
+# for test: sim_condition = simulation_conditions[which(simulation_conditions$id==468),]
 
 run_wrapper <- function(sim_condition) {
   results_list = list()
@@ -40,7 +40,9 @@ run_wrapper <- function(sim_condition) {
                            sim_condition$n_ttl_betas, 
                            sim_condition$fix_rdm_ratio,
                            sim_condition$sigma_fix,
-                           sim_condition$sigma_rdm_fix_ratio)
+                           sim_condition$sigma_rdm_fix_ratio,
+                           sim_condition$ar1_phi,
+                           sim_condition$na_rate)
       # ground truth mixed effect model
       m0 <- fit_glmer(y = res$y,
                       c = res$c,
@@ -81,35 +83,16 @@ run_wrapper <- function(sim_condition) {
   return(toReturn)
 }
 
-#This function actually runs the whole simulation study by deploying it to the SLURM cluster
 sjob = slurm_map(
-  #The use of split here breaks the simulation conditions into a list of rows
-  #so it can be used by slurm_map
   split(simulation_conditions, simulation_conditions$id),
   run_wrapper,
-  ###From here to the next comment are control parameters, you will likely not change these
   nodes=nrow(simulation_conditions),
   cpus_per_node = 1,
   submit = TRUE,
   preschedule_cores = F,
-  #The slurm options is where you specify the time, as well as our lab account
-  #The partition should be usually set to standard.
   slurm_options =
-    c(account = "netlab", partition = "standard", time = "2-00:00:00"), # standard
-  #This line is vitally important: It imports all functions you have in your environment
-  #Because you've sourced your SimFunction file, you should have all necessary functions
-  #In the environment.
+    c(account = "netlab", partition = "standard", time = "3-00:00:00"), # standard
   global_objects = lsf.str()
 )
-
-
-#This saves the sjob object, if you don't save it, you can't easily pull out the results
-save(sjob, file = "nic_simulation_run_2day.Rdata")
-
-
-#You run these lines after your simulation is complete.
-load("nic_simulation_run.Rdata")
-output = get_slurm_out(sjob, outtype = "table")
-
-
+save(sjob, file = "nic_simulation_run_3days.Rdata")
 
