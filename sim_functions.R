@@ -30,7 +30,8 @@ generate_data <- function(n_cluster,
                           sigma_fix,
                           sigma_rdm_fix_ratio,
                           ar1_phi,
-                          na_rate) {
+                          na_rate,
+                          family=c("binomial","gaussian")[1]) {
   library(dplyr)
   library(MASS)
   # note: intercepts will be allowed in random effects, all random effects will be in fixed effects as well
@@ -119,12 +120,17 @@ generate_data <- function(n_cluster,
   stopifnot(dim(data)[2] == dim(betas)[2])
   
   # returns complete
+  c <- as.numeric(cid_df$cluster)
   data <- as.matrix(data)
   betas <- as.matrix(betas)
-  l <- as.numeric(rowSums(data * betas)) #+ rnorm(nrow(data), 0, residual_error)
-  p <- 1/(1+exp(-l))
-  y <- rbinom(length(p), 1, p)
-  c <- as.numeric(cid_df$cluster)
+  l <- as.numeric(rowSums(data * betas))
+  if(family=="binomial"){
+    p <- 1/(1+exp(-l))
+    y <- rbinom(length(p), 1, p)
+  }else{
+    p <- NULL
+    y <- l + rnorm(nrow(data), 0, 2)
+  }
   
   # cluster-wise missing at random
   if(na_rate>0){
@@ -153,7 +159,7 @@ generate_data <- function(n_cluster,
               "betas" = betas))
 }
 
-fit_glmer <- function(y, c, data){
+fit_glmer <- function(y, c, data, family=c("binomial","gaussian")[1]){
   library(Matrix)
   library(lme4)
   
@@ -163,15 +169,22 @@ fit_glmer <- function(y, c, data){
   
   fix_vars <- grep("^fix\\d+$", colnames(data), value = TRUE)
   rdm_vars <- grep("^rdm\\d+$", colnames(data), value = TRUE)
-  model <- glmer(formula(paste0("y~", paste0(c(fix_vars, rdm_vars),collapse = "+"),
-                                "+",paste0(paste0("(0+",rdm_vars,"|c)"),collapse = "+"), "+ (1|c)" )), 
-                 data = df_mdl, family = binomial)
+  
+  if(family == "binomial"){
+    model <- glmer(formula(paste0("y~", paste0(c(fix_vars, rdm_vars),collapse = "+"),
+                                  "+",paste0(paste0("(0+",rdm_vars,"|c)"),collapse = "+"), "+ (1|c)" )), 
+                   data = df_mdl, family = binomial)
+  }else if(family == "gaussian"){
+    model <- lmer(formula(paste0("y~", paste0(c(fix_vars, rdm_vars),collapse = "+"),
+                                  "+",paste0(paste0("(0+",rdm_vars,"|c)"),collapse = "+"), "+ (1|c)" )), 
+                   data = df_mdl)
+  }
   return(model)
 }
 
 
 
-eval_glm <- function(y, c, data){
+eval_glm <- function(y, c, data, family=c("binomial","gaussian")[1]){
   
   df_mdl <- as.data.frame(data)
   df_mdl$y <- y
@@ -180,34 +193,56 @@ eval_glm <- function(y, c, data){
   fix_vars <- grep("^fix\\d+$", colnames(data), value = TRUE)
   rdm_vars <- grep("^rdm\\d+$", colnames(data), value = TRUE)
   fml <- formula(paste0("y~", paste0(c(fix_vars, rdm_vars),collapse = "+")))
-  mdl <- glm(fml, data = df_mdl, family = "binomial")
+  mdl <- glm(fml, data = df_mdl, family = family)
   mdl$c <- c
   
   # information criteria
-  deviance <- NIC(mdl)$dev
-  nic <- NIC(mdl)$nic
-  aic <- NIC(mdl)$aic
+  nic_res <- NIC(mdl, family = family)
+  deviance <- nic_res$dev
+  nic <- nic_res$nic
+  aic <- nic_res$aic
   bic <- BIC(mdl)
-  vcov <- vcov.robust(mdl, cluster = c)$vcov
+  vcov <- nic_res$robcov
   
   
   # loo auc and loo deviance
-  y_prob <- c()
+  y_pred <- c()
   y_true <- c()
+  looDeviance <- c()
   for (f_sub in unique(df_mdl$c)){
-    mdl_sub <- glm(fml, family = "binomial", data = df_mdl[!df_mdl$c==f_sub,])
-    y_prob <- c(y_prob, predict(mdl_sub, type = "response",
-                                newdata = df_mdl[df_mdl$c==f_sub,]))
-    y_true <- c(y_true, df_mdl[df_mdl$c==f_sub,"y"])
+    mdl_sub <- glm(fml, family = family, data = df_mdl[!df_mdl$c==f_sub,])
+    y_pred_sub <- predict(mdl_sub, type = "response", newdata = df_mdl[df_mdl$c==f_sub,])
+    y_true_sub <- df_mdl[df_mdl$c==f_sub,"y"]
+    y_pred <- c(y_pred, y_pred_sub)
+    y_true <- c(y_true, y_true_sub)
+    # if(family=="gaussian"){
+    #   b <- coef(mdl_sub)[!is.na(coef(mdl_sub))]
+    #   x <- as.matrix(model.matrix(mdl_sub))[,names(b)]
+    #   y <- mdl_sub$y
+    #   c <- mdl_sub$c
+    #   p <- x%*%b
+    #   # nobs <- length(y) #sqrt(1/nobs * sum( (y-p)^2 )) # sub sigma
+    #   s <- sigma(mdl_sub) 
+    #   looDeviance_sub <- length(y_true_sub)*log(2*pi*s^2) + 1/s^2*sum( (y_true_sub-y_pred_sub)^2 )  
+    #   looDeviance <- c(looDeviance, looDeviance_sub)
+    # }
   }
-  looAUC <- as.numeric(pROC::auc(pROC::roc(response = y_true, predictor = y_prob)))
-  looDeviance <- -2*sum(y_true * log(y_prob) + (1 - y_true) * log(1 - y_prob), na.rm = TRUE)
+  if(family=="binomial"){
+    looAUC <- as.numeric(pROC::auc(pROC::roc(response = y_true, predictor = y_pred)))
+    looDeviance <- -2*sum(y_true * log(y_pred) + (1 - y_true) * log(1 - y_pred), na.rm = TRUE)
+  }
+  if(family=="gaussian"){
+    looAUC <- NULL
+    s <- sigma(mdl)
+    looDeviance <- length(y_true)*log(2*pi*s^2) + 1/s^2*sum( (y_true-y_pred)^2 )  
+    # looDeviance <- sum(looDeviance)
+  }
   
   return(list("mdl"=mdl,
               "aic"=aic,
               "nic"=nic,
               "bic"=bic,
-              "deviance"=deviance,
+              "deviance"= deviance,
               "looAUC" = looAUC,
               "looDeviance" = looDeviance,
               "vcov" = vcov))

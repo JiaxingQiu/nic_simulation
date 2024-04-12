@@ -21,9 +21,10 @@ summary(res_df$bic_diff)
 lr_sv_lme_plot <- list()
 lr_sv_lme_se_plot <- list()
 nic_vs_aic_plot <- list()
-for(r in sigma_rdm_fix_ratio){
+for(r in unique(res_df$sigma_rdm_fix_ratio) ){
   agg_df <- res_df %>% 
     filter(sigma_fix==5) %>%
+    filter(fix_rdm_ratio==0.2) %>%
     filter(sigma_rdm_fix_ratio==r) %>%
     group_by(id) %>% 
     summarise(bias0=median(bias0),
@@ -55,7 +56,7 @@ for(r in sigma_rdm_fix_ratio){
     geom_point(size=1) +
     # scale_y_sqrt() +
     # scale_y_log10() +
-    scale_y_continuous(limits = c(0, 8000)) +
+    # scale_y_continuous(limits = c(0, 8000)) +
     scale_x_continuous(limits = c(3, 15)) +
     coord_trans(y = "sqrt") +
     facet_wrap(~n_cluster + n_obs_per_cluster, ncol = 5, nrow=2) + 
@@ -105,7 +106,8 @@ for(r in sigma_rdm_fix_ratio){
   plot_df$n_cluster <- factor(plot_df$n_cluster, levels=c("50 clusters","100 clusters") )
   nic_vs_aic_plot[[paste0("ratio=",r)]] <- ggplot(data = plot_df, aes(x = n_ttl_betas, y = abs(ic_diff), color = ic_type)) + 
     geom_point(size=1) +
-    scale_y_continuous(limits = c(0, 100)) +
+    geom_hline(aes(yintercept=0)) + 
+    scale_y_continuous(breaks=c(0,10,25,50,75)) + #limits = c(0, 100), 
     scale_x_continuous(limits = c(3, 15)) +
     coord_trans(y = "sqrt") +
     facet_wrap(~n_cluster + n_obs_per_cluster, ncol=5, nrow=2) + 

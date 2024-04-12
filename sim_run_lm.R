@@ -26,12 +26,9 @@ flst = list.files( path)
 sapply(c(paste(path,flst,sep="/")), source, .GlobalEnv)
 source("./sim_conditions.R")
 
-
-
-#This function runs each condition (i.e. each row in the simulation condition data.frame)
 # for test: sim_condition = simulation_conditions[which(simulation_conditions$id==400),]
 
-run_wrapper <- function(sim_condition) {
+run_wrapper_lm <- function(sim_condition) {
   results_list = list()
   for(i in 1:sim_condition$iter){
     tryCatch({
@@ -42,15 +39,19 @@ run_wrapper <- function(sim_condition) {
                            sim_condition$sigma_fix,
                            sim_condition$sigma_rdm_fix_ratio,
                            sim_condition$ar1_phi,
-                           sim_condition$na_rate)
+                           sim_condition$na_rate,
+                           family = "gaussian")
       # ground truth mixed effect model
       m0 <- fit_glmer(y = res$y,
                       c = res$c,
-                      data = res$data)
+                      data = res$data,
+                      family = "gaussian")
+      
       # lr model evaluation matrices
       m1 <- eval_glm(y = res$y,
-                    c = res$c,
-                    data = res$data)
+                     c = res$c,
+                     data = res$data,
+                     family = "gaussian")
       stopifnot(!is.na(m1$aic))
       
       # measure bias
@@ -83,16 +84,16 @@ run_wrapper <- function(sim_condition) {
   return(toReturn)
 }
 
-sjob = slurm_map(
+
+sjob_lm = slurm_map(
   split(simulation_conditions, simulation_conditions$id),
-  run_wrapper,
+  run_wrapper_lm,
   nodes=nrow(simulation_conditions),
   cpus_per_node = 1,
   submit = TRUE,
   preschedule_cores = F,
   slurm_options =
-    c(account = "netlab", partition = "standard", time = "3-00:00:00"), # standard
+    c(account = "netlab", partition = "standard", time = "2-00:00:00"), # standard
   global_objects = lsf.str()
 )
-save(sjob, file = "nic_simulation_run_3days.Rdata")
-
+save(sjob_lm, file = "nic_simulation_run_lm_2days.Rdata")

@@ -1,13 +1,14 @@
 #' Clustered statistics from glm with link function of logit
 #' 
 #' @param mdl a model object from glm package for logistic regression.
-#' @cluster a column vector for cluster id
+#' @param cluster a column vector for cluster id
+#' @param type type of model lr = logistic regression, lm linear model
 #' @returns vcov a numeric variance covariance matrix
 
 
 
 
-vcov.robust <- function(mdl, cluster){
+vcov.robust <- function(mdl, cluster, family=c("binomial","gaussian")[1]){
   # initiate variance covariance matrix to return
   vcov <- NULL
   
@@ -27,7 +28,12 @@ vcov.robust <- function(mdl, cluster){
     }
   }
   
-  vcov <- vcov.robust.xy(x,y,b,c)$cHScov
+  if(family=="binomial"){
+    vcov <- vcov.robust.xy(x,y,b,c)$cHScov
+  }else if(family=="gaussian"){
+    vcov <- vcov.robust.xy_lm(x,y,b,c)$cHScov
+  }
+  
   
   return(list(vcov = vcov))
 }
