@@ -133,10 +133,18 @@ generate_data <- function(n_cluster,
   }
   
   # cluster-wise missing at random
-  if(na_rate>0){
+  if(na_rate>0 & na_rate<1){
     cluster_na_rate <- rnorm(n_cluster, na_rate, 0.1)
     cluster_na_rate[cluster_na_rate>0.8] <- 0.8
     cluster_na_rate[cluster_na_rate<0] <- 0
+    remaining_indices <- random_removal(c, cluster_na_rate)
+    data <- data[remaining_indices, ]
+    betas <- betas[remaining_indices, ]
+    p <- p[remaining_indices]
+    y <- y[remaining_indices]
+    c <- c[remaining_indices] 
+  }else if(na_rate == 1){
+    cluster_na_rate <- runif(n_cluster, 0.1, 0.9)
     remaining_indices <- random_removal(c, cluster_na_rate)
     data <- data[remaining_indices, ]
     betas <- betas[remaining_indices, ]
@@ -159,7 +167,7 @@ generate_data <- function(n_cluster,
               "betas" = betas))
 }
 
-fit_glmer <- function(y, c, data, family=c("binomial","gaussian")[1]){
+fit_eval_glmer <- function(y, c, data, family=c("binomial","gaussian")[1]){
   library(Matrix)
   library(lme4)
   
@@ -170,21 +178,46 @@ fit_glmer <- function(y, c, data, family=c("binomial","gaussian")[1]){
   fix_vars <- grep("^fix\\d+$", colnames(data), value = TRUE)
   rdm_vars <- grep("^rdm\\d+$", colnames(data), value = TRUE)
   
+  fml <- formula(paste0("y~", paste0(c(fix_vars, rdm_vars),collapse = "+"), "+",paste0(paste0("(0+",rdm_vars,"|c)"),collapse = "+"), "+ (1|c)" ))
   if(family == "binomial"){
-    model <- glmer(formula(paste0("y~", paste0(c(fix_vars, rdm_vars),collapse = "+"),
-                                  "+",paste0(paste0("(0+",rdm_vars,"|c)"),collapse = "+"), "+ (1|c)" )), 
-                   data = df_mdl, family = binomial)
+    mdl <- glmer(fml,  data = df_mdl, family = binomial)
   }else if(family == "gaussian"){
-    model <- lmer(formula(paste0("y~", paste0(c(fix_vars, rdm_vars),collapse = "+"),
-                                  "+",paste0(paste0("(0+",rdm_vars,"|c)"),collapse = "+"), "+ (1|c)" )), 
-                   data = df_mdl)
+    mdl <- lmer(fml, data = df_mdl)
   }
-  return(model)
+  y_pred <- c()
+  y_true <- c()
+  for (f_sub in unique(df_mdl$c)){
+    print(f_sub)
+    if(family == "binomial"){
+      mdl_sub <- glmer(fml,  data = df_mdl[!df_mdl$c==f_sub,], family = binomial)
+    }else if(family == "gaussian"){
+      mdl_sub <- lmer(fml, data = df_mdl[!df_mdl$c==f_sub,])
+    }
+    y_pred_sub <- predict(mdl_sub, newdata = df_mdl[df_mdl$c==f_sub,], type = "response", allow.new.levels=T)
+    y_true_sub <- df_mdl[df_mdl$c==f_sub,"y"]
+    y_pred <- c(y_pred, y_pred_sub)
+    y_true <- c(y_true, y_true_sub)
+  }
+  if(family=="binomial"){
+    loopred <- as.numeric(pROC::auc(pROC::roc(response = y_true, predictor = y_pred)))
+    looDeviance <- -2*sum(y_true * log(y_pred) + (1 - y_true) * log(1 - y_pred), na.rm = TRUE)
+  }
+  if(family=="gaussian"){
+    loopred <- sqrt(sum( (y_true-y_pred)^2 )) # MSE
+    s <- sigma(mdl)
+    looDeviance <- length(y_true)*log(2*pi*s^2) + 1/s^2*sum( (y_true-y_pred)^2 )  
+  }
+  return(list("mdl" = mdl,
+              "aic" = AIC(mdl),
+              "bic" = BIC(mdl),
+              "deviance"= deviance(mdl),
+              "loopred"= loopred,
+              "looDeviance" = looDeviance))
 }
 
 
 
-eval_glm <- function(y, c, data, family=c("binomial","gaussian")[1]){
+fit_eval_glm <- function(y, c, data, family=c("binomial","gaussian")[1]){
   
   df_mdl <- as.data.frame(data)
   df_mdl$y <- y
@@ -208,34 +241,21 @@ eval_glm <- function(y, c, data, family=c("binomial","gaussian")[1]){
   # loo auc and loo deviance
   y_pred <- c()
   y_true <- c()
-  looDeviance <- c()
   for (f_sub in unique(df_mdl$c)){
     mdl_sub <- glm(fml, family = family, data = df_mdl[!df_mdl$c==f_sub,])
     y_pred_sub <- predict(mdl_sub, type = "response", newdata = df_mdl[df_mdl$c==f_sub,])
     y_true_sub <- df_mdl[df_mdl$c==f_sub,"y"]
     y_pred <- c(y_pred, y_pred_sub)
     y_true <- c(y_true, y_true_sub)
-    # if(family=="gaussian"){
-    #   b <- coef(mdl_sub)[!is.na(coef(mdl_sub))]
-    #   x <- as.matrix(model.matrix(mdl_sub))[,names(b)]
-    #   y <- mdl_sub$y
-    #   c <- mdl_sub$c
-    #   p <- x%*%b
-    #   # nobs <- length(y) #sqrt(1/nobs * sum( (y-p)^2 )) # sub sigma
-    #   s <- sigma(mdl_sub) 
-    #   looDeviance_sub <- length(y_true_sub)*log(2*pi*s^2) + 1/s^2*sum( (y_true_sub-y_pred_sub)^2 )  
-    #   looDeviance <- c(looDeviance, looDeviance_sub)
-    # }
   }
   if(family=="binomial"){
-    looAUC <- as.numeric(pROC::auc(pROC::roc(response = y_true, predictor = y_pred)))
+    loopred <- as.numeric(pROC::auc(pROC::roc(response = y_true, predictor = y_pred)))
     looDeviance <- -2*sum(y_true * log(y_pred) + (1 - y_true) * log(1 - y_pred), na.rm = TRUE)
   }
   if(family=="gaussian"){
-    looAUC <- NULL
+    loopred <- sqrt(sum( (y_true-y_pred)^2 )) # MSE
     s <- sigma(mdl)
     looDeviance <- length(y_true)*log(2*pi*s^2) + 1/s^2*sum( (y_true-y_pred)^2 )  
-    # looDeviance <- sum(looDeviance)
   }
   
   return(list("mdl"=mdl,
@@ -243,7 +263,7 @@ eval_glm <- function(y, c, data, family=c("binomial","gaussian")[1]){
               "nic"=nic,
               "bic"=bic,
               "deviance"= deviance,
-              "looAUC" = looAUC,
+              "loopred" = loopred,
               "looDeviance" = looDeviance,
               "vcov" = vcov))
 }
@@ -254,7 +274,7 @@ calculate_bias <- function(res, m0, m1){
                         grep("^beta_fix\\d+$", colnames(res$betas), value = TRUE),
                         grep("^beta_fix_rdm\\d+$", colnames(res$betas), value = TRUE) )
   fix_effect_betas <- unique(res$betas[,fix_effect_betas])
-  bias0 <- sum((coef(summary(m0))[,"Estimate"] - fix_effect_betas)^2)/length(fix_effect_betas)
+  bias0 <- sum((coef(summary(m0$mdl))[,"Estimate"] - fix_effect_betas)^2)/length(fix_effect_betas)
   bias1 <- sum((coef(m1$mdl) - fix_effect_betas)^2)/length(fix_effect_betas)
   
   
@@ -267,7 +287,7 @@ calculate_se_accuracy <- function(res, m0, m1){
                         grep("^beta_fix\\d+$", colnames(res$betas), value = TRUE),
                         grep("^beta_fix_rdm\\d+$", colnames(res$betas), value = TRUE) )
   fix_effect_betas <- unique(res$betas[,fix_effect_betas])
-  se_ratio0 <- mean(abs(coef(summary(m0))[,"Estimate"] - fix_effect_betas)/ sqrt(diag(vcov(m0)))) #coef(summary(m0))[,"Std. Error"])
+  se_ratio0 <- mean(abs(coef(summary(m0$mdl))[,"Estimate"] - fix_effect_betas)/ sqrt(diag(vcov(m0$mdl)))) #coef(summary(m0))[,"Std. Error"])
   se_ratio1 <- mean(abs(coef(m1$mdl) - fix_effect_betas)/sqrt(diag(m1$vcov)))
   
   return(list(se_ratio0 = se_ratio0,

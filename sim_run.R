@@ -29,7 +29,7 @@ source("./sim_conditions.R")
 
 
 #This function runs each condition (i.e. each row in the simulation condition data.frame)
-# for test: sim_condition = simulation_conditions[which(simulation_conditions$id==400),]
+# for test: sim_condition = simulation_conditions[which(simulation_conditions$id==555),]
 
 run_wrapper <- function(sim_condition) {
   results_list = list()
@@ -44,13 +44,13 @@ run_wrapper <- function(sim_condition) {
                            sim_condition$ar1_phi,
                            sim_condition$na_rate)
       # ground truth mixed effect model
-      m0 <- fit_glmer(y = res$y,
-                      c = res$c,
-                      data = res$data)
+      m0 <- fit_eval_glmer(y = res$y,
+                           c = res$c,
+                           data = res$data)
       # lr model evaluation matrices
-      m1 <- eval_glm(y = res$y,
-                    c = res$c,
-                    data = res$data)
+      m1 <- fit_eval_glm(y = res$y,
+                         c = res$c,
+                         data = res$data)
       stopifnot(!is.na(m1$aic))
       
       # measure bias
@@ -65,13 +65,17 @@ run_wrapper <- function(sim_condition) {
                                bias1 = bias$bias1,
                                se_ratio0 = se_ratio$se_ratio0,
                                se_ratio1 = se_ratio$se_ratio1,
-                               aic = m1$aic,
-                               bic = m1$bic,
-                               nic = m1$nic,
-                               dev = m1$deviance,
-                               looauc = m1$looAUC,
-                               loodev = m1$looDeviance)
-      
+                               aic0 = m0$aic,
+                               aic1 = m1$aic,
+                               bic0 = m0$bic,
+                               bic1 = m1$bic,
+                               nic1 = m1$nic,
+                               dev0 = m0$deviance,
+                               dev1 = m1$deviance,
+                               loopred0 = m0$loopred,
+                               loopred1 = m1$loopred,
+                               loodev0 = m0$looDeviance,
+                               loodev1 = m1$looDeviance)
       
     }, error = function(e){
       print(e)
@@ -91,8 +95,8 @@ sjob = slurm_map(
   submit = TRUE,
   preschedule_cores = F,
   slurm_options =
-    c(account = "netlab", partition = "standard", time = "3-00:00:00"), # standard
+    c(account = "netlab", partition = "standard", time = "5-00:00:00"), # standard
   global_objects = lsf.str()
 )
-save(sjob, file = "nic_simulation_run_3days.Rdata")
+save(sjob, file = "nic_simulation_run_lr_5days.Rdata")
 

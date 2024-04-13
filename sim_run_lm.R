@@ -26,7 +26,7 @@ flst = list.files( path)
 sapply(c(paste(path,flst,sep="/")), source, .GlobalEnv)
 source("./sim_conditions.R")
 
-# for test: sim_condition = simulation_conditions[which(simulation_conditions$id==400),]
+# for test: sim_condition = simulation_conditions[which(simulation_conditions$id==555),]
 
 run_wrapper_lm <- function(sim_condition) {
   results_list = list()
@@ -42,16 +42,16 @@ run_wrapper_lm <- function(sim_condition) {
                            sim_condition$na_rate,
                            family = "gaussian")
       # ground truth mixed effect model
-      m0 <- fit_glmer(y = res$y,
-                      c = res$c,
-                      data = res$data,
-                      family = "gaussian")
+      m0 <- fit_eval_glmer(y = res$y,
+                           c = res$c,
+                           data = res$data,
+                           family = "gaussian")
       
       # lr model evaluation matrices
-      m1 <- eval_glm(y = res$y,
-                     c = res$c,
-                     data = res$data,
-                     family = "gaussian")
+      m1 <- fit_eval_glm(y = res$y,
+                         c = res$c,
+                         data = res$data,
+                         family = "gaussian")
       stopifnot(!is.na(m1$aic))
       
       # measure bias
@@ -66,12 +66,17 @@ run_wrapper_lm <- function(sim_condition) {
                                bias1 = bias$bias1,
                                se_ratio0 = se_ratio$se_ratio0,
                                se_ratio1 = se_ratio$se_ratio1,
-                               aic = m1$aic,
-                               bic = m1$bic,
-                               nic = m1$nic,
-                               dev = m1$deviance,
-                               looauc = m1$looAUC,
-                               loodev = m1$looDeviance)
+                               aic0 = m0$aic,
+                               aic1 = m1$aic,
+                               bic0 = m0$bic,
+                               bic1 = m1$bic,
+                               nic1 = m1$nic,
+                               dev0 = m0$deviance,
+                               dev1 = m1$deviance,
+                               loopred0 = m0$loopred,
+                               loopred1 = m1$loopred,
+                               loodev0 = m0$looDeviance,
+                               loodev1 = m1$looDeviance)
       
       
     }, error = function(e){
@@ -85,7 +90,7 @@ run_wrapper_lm <- function(sim_condition) {
 }
 
 
-sjob_lm = slurm_map(
+sjob = slurm_map(
   split(simulation_conditions, simulation_conditions$id),
   run_wrapper_lm,
   nodes=nrow(simulation_conditions),
@@ -96,4 +101,4 @@ sjob_lm = slurm_map(
     c(account = "netlab", partition = "standard", time = "2-00:00:00"), # standard
   global_objects = lsf.str()
 )
-save(sjob_lm, file = "nic_simulation_run_lm_2days.Rdata")
+save(sjob, file = "nic_simulation_run_lm_2days.Rdata")
