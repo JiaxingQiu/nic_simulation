@@ -1,4 +1,4 @@
-modified_stepwise_glm_backward <- function(df,
+modified_stepwise_glm_backward_parallel <- function(df,
                                   y,
                                   x,
                                   c,
@@ -6,7 +6,8 @@ modified_stepwise_glm_backward <- function(df,
                                   eval_ls,
                                   eval_by,
                                   nfold=10, # default 10 fold cv for "cvpred" and "cvDeviance"
-                                  family = c("binomial", "gaussian")[1]
+                                  family = c("binomial", "gaussian")[1],
+                                  free_cores = 2
 ){
   res_ls <- list()
   tune_ls <- list()
@@ -22,7 +23,7 @@ modified_stepwise_glm_backward <- function(df,
     }
     
     # ---- find optimal variable at this model size (step) ---- 
-    numCores <- detectCores() - 2  # Leave two cores free for system processes
+    numCores <- detectCores() - free_cores  # Leave two cores free for system processes
     registerDoParallel(cores=numCores)
     tune_ls[[length(x)-s+1]] <- foreach(i = c(1:ncol(rmvd_mat)), .packages = c("pROC", "dplyr")) %dopar% {
       # define result list object to return
@@ -99,10 +100,11 @@ modified_stepwise_glm_backward <- function(df,
     # ---- calculate other matrices with current setting ----
     x_picked <- setdiff(x_picked, x_removed)
     x_remove <- c(x_remove, x_removed)
-    res_ls[[length(x)-s+1]] <- all_subset_glm(df, y, x_picked, c, 
+    res_ls[[length(x)-s+1]] <- all_subset_glm_parallel(df, y, x_picked, c, 
                                   size=length(x_picked),
                                   eval_ls=eval_ls,
-                                  family = family)
+                                  family = family,
+                                  free_cores = free_cores)
     res_ls[[length(x)-s+1]][['x_removed']] <- x_removed
     res_ls[[length(x)-s+1]][['at_score']] <- at_score
   }

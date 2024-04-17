@@ -12,7 +12,7 @@
 
 library(foreach)
 library(doParallel)
-all_subset_glm <- function(df,
+all_subset_glm_parallel <- function(df,
                            y,
                            x,
                            c,
@@ -21,7 +21,8 @@ all_subset_glm <- function(df,
                                    "cvpred", "cvDeviance",
                                    "loopred", "looDeviance")[1:6],
                            nfold=10, # default 10 fold cv for "cvpred" and "cvDeviance"
-                           family = c("binomial", "gaussian")[1]){
+                           family = c("binomial", "gaussian")[1],
+                           free_cores = 2){
   
   if(is.null(size)) size <- seq(1,length(x))
   if(length(size)>0) size <- size[size<=length(x)]
@@ -31,7 +32,7 @@ all_subset_glm <- function(df,
     # Generate all combinations of size s in a matrix
     comb_mat <- combn(x, s)
     # parallel train logistic regression on each subset
-    numCores <- detectCores() - 2  # Leave two cores free for system processes
+    numCores <- detectCores() - free_cores  # Leave two cores free for system processes
     registerDoParallel(cores=numCores)
     res_ls[[paste0("s",s)]] <- foreach(i = c(1:ncol(comb_mat)), .packages = c("pROC", "dplyr")) %dopar% {
       # define result list object to return

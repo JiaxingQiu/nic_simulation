@@ -8,6 +8,8 @@ library(Matrix)
 library(lme4)
 library(MASS)
 library(pROC)
+library(foreach)
+library(doParallel)
 
 list.of.packages <- c("dplyr",
                       "rslurm",
@@ -81,7 +83,7 @@ run_wrapper <- function(sim_condition) {
       rdm_vars <- grep("^rdm\\d+$", colnames(res$data), value = TRUE)
       
       # step-wise forward 
-      m1_sl <- modified_stepwise_glm(df = df,
+      m1_sl <- modified_stepwise_glm_parallel(df = df,
                                      y = "y",
                                      x = c(fix_vars, rdm_vars),
                                      c = "cl", 
@@ -89,7 +91,8 @@ run_wrapper <- function(sim_condition) {
                                      eval_ls=c("Deviance", "AIC", "BIC", "NIC", "looDeviance"),
                                      eval_by="looDeviance",
                                      family = family,
-                                     forward = T)
+                                     forward = T,
+                                     free_cores = 0)
       res_df <- format_forward(m1_sl)
       # library(ggplot2)
       # ggplot(res_df, aes(x=model_size))+
@@ -128,4 +131,5 @@ sjob = slurm_map(
   global_objects = lsf.str()
 )
 save(sjob, file = paste0("nic_simulation_run_",family,"_model_select_5days.Rdata"))
+
 

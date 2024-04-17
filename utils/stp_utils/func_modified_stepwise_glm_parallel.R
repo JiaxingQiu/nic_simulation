@@ -13,7 +13,7 @@
 
 library(foreach)
 library(doParallel)
-modified_stepwise_glm <- function(df,
+modified_stepwise_glm_parallel <- function(df,
                            y,
                            x,
                            c,
@@ -26,7 +26,8 @@ modified_stepwise_glm <- function(df,
                                        "cvpred", "cvDeviance",
                                        "loopred", "looDeviance")[4],
                            nfold=10, # default 10 fold cv for "cvpred" and "cvDeviance"
-                           family = c("binomial", "gaussian")[1]
+                           family = c("binomial", "gaussian")[1],
+                           free_cores = 2
 ){
   
   res_ls <- list()
@@ -39,7 +40,7 @@ modified_stepwise_glm <- function(df,
     for(st in seq(1, maxstep)){
       comb_mat <- combn(x_left, 1)
       # ---- find optimal variable at this model size (step) ---- 
-      numCores <- detectCores() - 2  # Leave two cores free for system processes
+      numCores <- detectCores() - free_cores  # Leave two cores free for system processes
       registerDoParallel(cores=numCores)
       tune_ls[[st]] <- foreach(i = c(1:ncol(comb_mat)), .packages = c("pROC", "dplyr")) %dopar% {
         # define result list object to return
@@ -117,10 +118,11 @@ modified_stepwise_glm <- function(df,
       # ---- calculate other matrices with current setting ----
       x_picked <- c(x_picked, x_pick)
       x_left <- setdiff(x_left, x_pick)
-      res_ls[[st]] <- all_subset_glm(df, y, x_picked, c, 
+      res_ls[[st]] <- all_subset_glm_parallel(df, y, x_picked, c, 
                                     size=length(x_picked),
                                     eval_ls=eval_ls,
-                                    family = family)
+                                    family = family,
+                                    free_cores = free_cores)
       res_ls[[st]][['x_pick']] <- x_pick
       res_ls[[st]][['at_score']] <- at_score
     }
@@ -128,7 +130,7 @@ modified_stepwise_glm <- function(df,
   
   # backward step wise
   if(!forward){
-    back_obj <- modified_stepwise_glm_backward(df, y, x, c, maxstep, eval_ls, eval_by, nfold, family)
+    back_obj <- modified_stepwise_glm_backward_parallel(df, y, x, c, maxstep, eval_ls, eval_by, nfold, family)
     res_ls <- back_obj$res_ls
     tune_ls <- back_obj$tune_ls
   }
