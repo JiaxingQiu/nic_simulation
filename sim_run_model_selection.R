@@ -91,7 +91,7 @@ run_wrapper <- function(sim_condition) {
                                      eval_by="looDeviance",
                                      family = "binomial",
                                      forward = T,
-                                     free_cores = 0)
+                                     free_cores = 1)
       res_df <- format_forward(m1_sl)
       # library(ggplot2)
       # ggplot(res_df, aes(x=model_size))+
