@@ -89,7 +89,7 @@ run_wrapper <- function(sim_condition) {
                                      maxstep = 30,
                                      eval_ls=c("Deviance", "AIC", "BIC", "NIC", "looDeviance"),
                                      eval_by="looDeviance",
-                                     family = "binomial",
+                                     family = "gaussian",
                                      forward = T,
                                      free_cores = 1)
       res_df <- format_forward(m1_sl)
@@ -129,6 +129,6 @@ sjob = slurm_map(
     c(account = "netlab", partition = "standard", time = "5-00:00:00"), # standard
   global_objects = lsf.str()
 )
-save(sjob, file = paste0("nic_simulation_run_lr_model_select_5days.Rdata"))
+save(sjob, file = paste0("nic_simulation_run_lm_model_select_5days.Rdata"))
 
 
