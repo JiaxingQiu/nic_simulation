@@ -25,7 +25,6 @@ if(length(new.packages)) install.packages(new.packages, lib = "/sfs/qumulo/qhome
 
 
 
-family = "binomial"
 
 source("./sim_functions.R")
 path = paste0("./utils/nic_utils")
@@ -90,7 +89,7 @@ run_wrapper <- function(sim_condition) {
                                      maxstep = 30,
                                      eval_ls=c("Deviance", "AIC", "BIC", "NIC", "looDeviance"),
                                      eval_by="looDeviance",
-                                     family = family,
+                                     family = "binomial",
                                      forward = T,
                                      free_cores = 0)
       res_df <- format_forward(m1_sl)
@@ -130,6 +129,6 @@ sjob = slurm_map(
     c(account = "netlab", partition = "standard", time = "5-00:00:00"), # standard
   global_objects = lsf.str()
 )
-save(sjob, file = paste0("nic_simulation_run_",family,"_model_select_5days.Rdata"))
+save(sjob, file = paste0("nic_simulation_run_lr_model_select_5days.Rdata"))
 
 
