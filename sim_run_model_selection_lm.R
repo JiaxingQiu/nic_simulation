@@ -97,7 +97,7 @@ run_wrapper <- function(sim_condition) {
       # ggplot(res_df, aes(x=model_size))+
       #   geom_line(aes(y=nic), color="red")+
       #   geom_line(aes(y=aic), color="blue")+
-      #   # geom_line(aes(y=bic), color="orange")+
+      #   geom_line(aes(y=bic), color="orange")+
       #   geom_line(aes(y=dev), color="gray") +
       #   geom_line(aes(y=loodev), color="black", linetype="dotted") +
       #   geom_point(aes(y=loodev), color="black") +
