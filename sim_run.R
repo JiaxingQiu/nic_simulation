@@ -29,7 +29,9 @@ source("./sim_conditions.R")
 
 
 #This function runs each condition (i.e. each row in the simulation condition data.frame)
-# for test: sim_condition = simulation_conditions[which(simulation_conditions$id==555),]
+# for test: 
+# sim_condition = simulation_conditions[which(simulation_conditions$id==56),]
+# saveRDS(res, "./doug_lr_sim_data.RDS")
 
 run_wrapper <- function(sim_condition) {
   results_list = list()
@@ -61,6 +63,7 @@ run_wrapper <- function(sim_condition) {
       
       results_list[[i]] = list(id = sim_condition$id, 
                                iter = i, 
+                               N = nrow(res$data),
                                bias0 = bias$bias0,
                                bias1 = bias$bias1,
                                se_ratio0 = se_ratio$se_ratio0,

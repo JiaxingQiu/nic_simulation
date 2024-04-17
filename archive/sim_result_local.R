@@ -47,9 +47,9 @@ for(a in unique(res_df$ar1_phi)){
                 loodev = median(loodev))
     agg_df <- merge(agg_df, simulation_conditions, by="id", all.x=T)
     
-    # bias
+    # loo prediction performance
     plot_df <- pivot_longer(agg_df, 
-                            cols = starts_with("bias"), 
+                            cols = starts_with("loopred"), 
                             names_to = "bias_type", 
                             values_to = "bias_value")
     plot_df$model <- ifelse(plot_df$bias_type=="bias0","LME", "LM")

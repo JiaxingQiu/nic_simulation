@@ -219,6 +219,7 @@ fit_eval_glmer <- function(y, c, data, family=c("binomial","gaussian")[1]){
 
 fit_eval_glm <- function(y, c, data, family=c("binomial","gaussian")[1]){
   
+  
   df_mdl <- as.data.frame(data)
   df_mdl$y <- y
   df_mdl$c <- as.factor(c)
@@ -237,6 +238,13 @@ fit_eval_glm <- function(y, c, data, family=c("binomial","gaussian")[1]){
   bic <- BIC(mdl)
   vcov <- nic_res$robcov
   
+  # # -- check with robcov lrm in rms  ---
+  # library(rms)
+  # dd <- datadist(df_mdl)# train model nfold times
+  # mdl <- rms::robcov(rms::lrm(as.formula(fml),x=TRUE, y=TRUE, data=df_mdl),cluster=df_mdl$c)
+  # vcov(mdl) # identical!
+  # mdl <- rms::bootcov(rms::lrm(as.formula(fml),x=TRUE, y=TRUE, data=df_mdl),cluster=df_mdl$c)
+  # vcov(mdl) # larger
   
   # loo auc and loo deviance
   y_pred <- c()
@@ -296,6 +304,14 @@ calculate_se_accuracy <- function(res, m0, m1){
 }
 
 
-
+generate_overfit <- function(res, pl = 5){
+  # for each of the randome effect predictors add poly 5
+  for(rdm in grep("^rdm\\d+$", colnames(res$data), value = TRUE) ){
+    over_mat <- as.matrix(poly(res$data[,rdm],pl),nrow=nrow(res$data), ncol=pl)
+    colnames(over_mat) <- paste0(rdm,c(1:ncol(over_mat)))
+    res$data <- cbind(res$data, over_mat)
+  }
+ return(res)
+}
 
 
