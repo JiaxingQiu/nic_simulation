@@ -126,9 +126,9 @@ sjob = slurm_map(
   submit = TRUE,
   preschedule_cores = F,
   slurm_options =
-    c(account = "netlab", partition = "standard", time = "5-00:00:00"), # standard
+    c(account = "netlab", partition = "standard", time = "1-00:00:00"), # standard
   global_objects = lsf.str()
 )
-save(sjob, file = paste0("nic_simulation_run_lm_model_select_5days.Rdata"))
+save(sjob, file = paste0("nic_simulation_run_lm_model_select_1day.Rdata"))
 
 
