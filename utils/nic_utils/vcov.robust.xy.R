@@ -44,7 +44,7 @@ vcov.robust.xy <- function(x,y,b,c){
   # J <- t(x) %*% diag(as.numeric(p*(1-p))) %*% x # very slow
   
   # Deviance = -2 * log likelihood
-  deviance <- -2 * sum(log(p)*y + log(1-p)*(1-y))
+  deviance <- -2 * sum(log(p)*y + log(1-p)*(1-y),na.rm = T)
   
   # -------------------- unclustered ------------------------
   # the derivative of log likelihood per component gi [n*p]

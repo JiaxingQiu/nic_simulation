@@ -167,7 +167,7 @@ generate_data <- function(n_cluster,
               "betas" = betas))
 }
 
-fit_eval_glmer <- function(y, c, data, family=c("binomial","gaussian")[1]){
+fit_eval_glmer <- function(y, c, data, family=c("binomial","gaussian")[1], skiploo = T){
   library(Matrix)
   library(lme4)
   
@@ -184,29 +184,34 @@ fit_eval_glmer <- function(y, c, data, family=c("binomial","gaussian")[1]){
   }else if(family == "gaussian"){
     mdl <- lmer(fml, data = df_mdl)
   }
-  y_pred <- c()
-  y_true <- c()
-  for (f_sub in unique(df_mdl$c)){
-    print(f_sub)
-    if(family == "binomial"){
-      mdl_sub <- glmer(fml,  data = df_mdl[!df_mdl$c==f_sub,], family = binomial)
-    }else if(family == "gaussian"){
-      mdl_sub <- lmer(fml, data = df_mdl[!df_mdl$c==f_sub,])
+  loopred <- deviance(mdl)
+  looDeviance <- deviance(mdl)
+  if(!skiploo){
+    y_pred <- c()
+    y_true <- c()
+    for (f_sub in unique(df_mdl$c)){
+      print(f_sub)
+      if(family == "binomial"){
+        mdl_sub <- glmer(fml,  data = df_mdl[!df_mdl$c==f_sub,], family = binomial)
+      }else if(family == "gaussian"){
+        mdl_sub <- lmer(fml, data = df_mdl[!df_mdl$c==f_sub,])
+      }
+      y_pred_sub <- predict(mdl_sub, newdata = df_mdl[df_mdl$c==f_sub,], type = "response", allow.new.levels=T)
+      y_true_sub <- df_mdl[df_mdl$c==f_sub,"y"]
+      y_pred <- c(y_pred, y_pred_sub)
+      y_true <- c(y_true, y_true_sub)
     }
-    y_pred_sub <- predict(mdl_sub, newdata = df_mdl[df_mdl$c==f_sub,], type = "response", allow.new.levels=T)
-    y_true_sub <- df_mdl[df_mdl$c==f_sub,"y"]
-    y_pred <- c(y_pred, y_pred_sub)
-    y_true <- c(y_true, y_true_sub)
+    if(family=="binomial"){
+      loopred <- as.numeric(pROC::auc(pROC::roc(response = y_true, predictor = y_pred)))
+      looDeviance <- -2*sum(y_true * log(y_pred) + (1 - y_true) * log(1 - y_pred), na.rm = TRUE)
+    }
+    if(family=="gaussian"){
+      loopred <- sqrt(sum( (y_true-y_pred)^2 )) # MSE
+      s <- sigma(mdl)
+      looDeviance <- length(y_true)*log(2*pi*s^2) + 1/s^2*sum( (y_true-y_pred)^2 )  
+    }
   }
-  if(family=="binomial"){
-    loopred <- as.numeric(pROC::auc(pROC::roc(response = y_true, predictor = y_pred)))
-    looDeviance <- -2*sum(y_true * log(y_pred) + (1 - y_true) * log(1 - y_pred), na.rm = TRUE)
-  }
-  if(family=="gaussian"){
-    loopred <- sqrt(sum( (y_true-y_pred)^2 )) # MSE
-    s <- sigma(mdl)
-    looDeviance <- length(y_true)*log(2*pi*s^2) + 1/s^2*sum( (y_true-y_pred)^2 )  
-  }
+  
   return(list("mdl" = mdl,
               "aic" = AIC(mdl),
               "bic" = BIC(mdl),
@@ -304,14 +309,89 @@ calculate_se_accuracy <- function(res, m0, m1){
 }
 
 
-generate_overfit <- function(res, pl = 5){
+generate_overfit <- function(res, nd = 5, type = c("poly","rcs")[1]){
+  res$data_org <- res$data
   # for each of the randome effect predictors add poly 5
   for(rdm in grep("^rdm\\d+$", colnames(res$data), value = TRUE) ){
-    over_mat <- as.matrix(poly(res$data[,rdm],pl),nrow=nrow(res$data), ncol=pl)
+    if(type=="poly"){
+      over_mat <- as.matrix(poly(res$data[,rdm],nd),nrow=nrow(res$data), ncol=nd)
+    }
+    if(type=="rcs"){
+      over_mat <- as.matrix(rms::rcs(res$data[,rdm],nd),nrow=nrow(res$data), ncol=nd)
+    }
     colnames(over_mat) <- paste0(rdm,c(1:ncol(over_mat)))
     res$data <- cbind(res$data, over_mat)
   }
  return(res)
 }
 
-
+detect_mal <- function(res_df, sim_condition){
+  mal <- F
+  
+  best_df <- data.frame() 
+  for(score in c("loodev", "nic", "aic", "bic", "nic")){
+    best_size <- res_df$model_size[which(res_df[,score]==min(res_df[,score]))][1]
+    best_score <- res_df[,score][which(res_df[,score]==min(res_df[,score]))][1]
+    score_1se <- sd(res_df[,score])/sqrt(nrow(res_df))
+    best_size_1se_min <- min(res_df$model_size[which(abs(res_df[,score]-min(res_df[,score]))<=score_1se)])
+    best_size_1se_max <- max(res_df$model_size[which(abs(res_df[,score]-min(res_df[,score]))<=score_1se)])
+    best_df <- bind_rows(best_df, data.frame(score,best_size, best_score, score_1se, best_size_1se_min,best_size_1se_max))
+  }
+  # library(tidyr)
+  # library(dplyr)
+  # library(ggplot2)
+  # library(ggpubr)
+  # res_df_long <- res_df %>%
+  #   pivot_longer(
+  #     cols = c(nic, aic, bic, dev, loodev),  # Specify columns to lengthen
+  #     names_to = "score",  # New column for the names
+  #     values_to = "value"  # New column for the values
+  #   )
+  # ymin <- res_df_long$value[which(res_df_long$value == min(res_df_long$value[res_df_long$score=="dev"]) )][1]
+  # ymax <- res_df_long$value[res_df_long$score=="loodev"&res_df_long$model_size==1]
+  # ggplot(res_df_long, aes(x = model_size, y = value, group = score, color = score)) +
+  #   geom_line() +
+  #   geom_line(data = filter(res_df_long, score == "loodev"), linetype = "dotted") +
+  #   geom_vline(xintercept = sim_condition$n_ttl_betas, color = "grey") +
+  #   scale_color_manual(values = c("nic" = "red", "aic" = "blue", "bic" = "orange", "dev" = "gray", "loodev" = "black")) +
+  #   theme_minimal() +
+  #   geom_errorbar(data = best_df, aes(x = best_size, xmin=best_size_1se_min, xmax=best_size_1se_max, y = best_score, color=score))+
+  #   geom_point(data = best_df, aes(x = best_size, y = best_score, color=score), size = 3)+
+  #   labs(title = paste0("iter = ",i), x = "Model Size", y = "Value", color = "Score") +
+  #   ylim(ymin, ymax)
+  
+  
+  # sharp decrease in dev
+  d <- c(0,diff(res_df$dev))
+  for(di in c(sim_condition$n_ttl_betas:length(d)) ){
+    e1 <- F
+    e2 <- F
+    if(d[di] < 5*mean(d[c( (di-3):(di-1) )]) & mean(d[c( (di-3):(di-1) )])<(-1) ){
+      e1 <- T
+    }
+    # if drop in single step is larger than 50% cumulative drop
+    if(abs(d[di]) > 0.5*(max(d[c(sim_condition$n_ttl_betas:di)]) - min(d[c(sim_condition$n_ttl_betas:di)])) ){
+      e2 <- T
+    }
+    if(e1&e2){
+      print(paste0("sharp decrease in dev at model size ",di))
+      mal <- T
+    }
+  }
+  
+  
+  # loodev best should not be too far away from data generating model
+  e <- abs(best_df$best_size[best_df$score=="loodev"] - sim_condition$n_ttl_betas)
+  if(e > max(res_df$model_size)/2){
+    print("detected mal simulation: loodev too far from generating model")
+    mal <- T
+  }
+  
+  # loodev 1se not to wide
+  e <- best_df$best_size_1se_max[best_df$score=="loodev"] - best_df$best_size_1se_min[best_df$score=="loodev"] 
+  if(e >= 0.8* max(res_df$model_size)){
+    print("detected mal simulation: loodev 1se too wide")
+    mal <- T
+  }
+  return(mal)
+}

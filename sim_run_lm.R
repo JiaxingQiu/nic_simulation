@@ -21,10 +21,13 @@ if(length(new.packages)) install.packages(new.packages, lib = "/sfs/qumulo/qhome
 
 
 source("./sim_functions.R")
-path = paste0("./nic_utils")
-flst = list.files( path)
-sapply(c(paste(path,flst,sep="/")), source, .GlobalEnv)
+for(u in c("nic", "ass", "stp", "lss", "do")){
+  path = paste0("./utils/",u,"_utils")
+  flst = list.files( path)
+  sapply(c(paste(path,flst,sep="/")), source, .GlobalEnv)
+}
 source("./sim_conditions.R")
+
 
 # for test: sim_condition = simulation_conditions[which(simulation_conditions$id==56),]
 # saveRDS(res, "./doug_lm_sim_data.RDS")
