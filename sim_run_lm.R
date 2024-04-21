@@ -21,7 +21,7 @@ if(length(new.packages)) install.packages(new.packages, lib = "/sfs/qumulo/qhome
 
 
 source("./sim_functions.R")
-for(u in c("nic", "ass", "stp", "lss", "do")){
+for(u in c("nic", "ass", "stp", "do")){
   path = paste0("./utils/",u,"_utils")
   flst = list.files( path)
   sapply(c(paste(path,flst,sep="/")), source, .GlobalEnv)
