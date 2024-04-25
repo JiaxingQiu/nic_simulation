@@ -34,9 +34,14 @@ for(sn in c("lm","lr")){
     facet_wrap(~score)+
     scale_fill_manual(values = c("rNIC" = "red", "AIC" = "blue", "BIC" = "orange")) +
     theme_minimal() +
-    labs(subtitle = ifelse(sn=="lm", "Gaussian", "Binomial"), 
-         x = paste0("Error in model selection by Minimum"), y = "Count", fill = "Criteria")+
-    theme(text = element_text(face = "bold"))  
+    labs(#subtitle = ifelse(sn=="lm", "Gaussian", "Binomial"), 
+         x = paste0("Error in model size selected by the Minimal"), y = "Count", fill = "Criteria")+
+    theme(text = element_text(face = "bold"),
+          strip.text = element_text(size=12, face="bold"),
+          axis.title = element_text(size=12),
+          axis.text = element_text(size=10),
+          legend.title = element_text(size=12), 
+          legend.text = element_text(size=10))  
   # best model by 1se
   diff_model_size_long <- diff_model_size_1se %>%
     pivot_longer(
@@ -52,20 +57,31 @@ for(sn in c("lm","lr")){
     facet_wrap(~score)+
     scale_fill_manual(values = c("rNIC" = "red", "AIC" = "blue", "BIC" = "orange")) +
     theme_minimal() +
-    labs(subtitle = ifelse(sn=="lm", "Gaussian", "Binomial"), 
-         x = paste0("Error in model selection by 1SE"), y = "Count", fill = "Criteria") +
-    theme(text = element_text(face = "bold"))  
+    labs(#subtitle = ifelse(sn=="lm", "Gaussian", "Binomial"),
+         x = paste0("Error in model size selected by 1SE"), y = "Count", fill = "Criteria") +
+    theme(text = element_text(face = "bold"),
+          strip.text = element_text(size=12, face="bold"),
+          axis.title = element_text(size=12),
+          axis.text = element_text(size=10),
+          legend.title = element_text(size=12), 
+          legend.text = element_text(size=10))  
   
 }
 
-# (generating model size = ",model_size,")
 
-p <- ggarrange(plotlist=pl,ncol=2,nrow=1,common.legend = T, legend = "none")
-p1 <- ggarrange(plotlist=pl_1se,ncol=2,nrow=1,common.legend = T, legend = "none")
-p_size <- ggarrange(p1,p,nrow=2,ncol=1)
-title_text <- paste0("Generating model size = ", model_size, 
-                     "; Number of clusters = ", sim_condition$n_cluster)
-p_size <- annotate_figure(p_size, top = text_grob(title_text, size = 14, face = "bold"))
-p_size %>% ggsave(filename=paste0("./res/model_select_error_",model_size,".png"), width = 10, height = 5, bg="white")
+
+p_lm <- ggarrange(pl[["lm"]],pl_1se[["lm"]],nrow=2,ncol=1, common.legend = T, legend = "none")
+p_lm <- annotate_figure(p_lm, top = text_grob("Gaussian", size = 14, face = "bold"))
+p_lr <- ggarrange(pl[["lr"]],pl_1se[["lr"]],nrow=2,ncol=1, common.legend = T, legend = "none")
+p_lr <- annotate_figure(p_lr, top = text_grob("Binomial", size = 14, face = "bold"))
+p_size <- ggarrange(p_lm, p_lr, nrow = 1, ncol = 2, common.legend = TRUE)
+
+# p <- ggarrange(plotlist=pl,ncol=2,nrow=1,common.legend = T, legend = "none")
+# p1 <- ggarrange(plotlist=pl_1se,ncol=2,nrow=1,common.legend = T, legend = "none")
+# p_size <- ggarrange(p1,p,nrow=2,ncol=1)
+# # title_text <- paste0("Model selection error in 100 interations ", ifelse(cluster_size==150,"(strong clustering)", "(weak clustering)") )
+# title_text <- "Error in 100 interations"
+# p_size <- annotate_figure(p_size, top = text_grob(title_text, size = 14, face = "bold", hjust=0, x=0))
+# p_size %>% ggsave(filename=paste0("./res/model_select_error_",model_size,"_",cluster_size,en,".png"), width = 10, height = 5, bg="white")
 
 

@@ -46,10 +46,13 @@ vcov.robust.xy_lm <- function(x,y,b,c){
   # vcov(mdl) check with sandwich::vcovHC(mdl, type = "const")
   
   # approximation of the number of parameters (effective d.f. of the model (counting intercept terms))
-  dof <- sum(diag(K%*%solve(J)))
+  dof <- length(diag(K%*%solve(J))) # sum(diag(K%*%solve(J)))
   
   # AIC
-  aic <- deviance + 2*dof # check with AIC(mdl)
+  aic <- deviance + 2*dof
+  
+  # NIC(AIC)
+  anic <- deviance + 2*sum(diag(K%*%solve(J)))
   
   # ---------------------- Clustered ------------------------
   # the derivative of log likelihood per cluster cgi [n*p]

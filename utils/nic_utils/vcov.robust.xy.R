@@ -58,10 +58,14 @@ vcov.robust.xy <- function(x,y,b,c){
   HScov <- solve(J)%*%K%*%solve(J)
   
   # approximation of the number of parameters (effective d.f. of the model (counting intercept terms))
-  dof <- sum(diag(K%*%solve(J)))
+  dof <- length(diag(K%*%solve(J))) # sum(diag(K%*%solve(J)))
   
   # AIC
   aic <- deviance + 2*dof
+  
+  # NIC(AIC)
+  anic <- deviance + 2*sum(diag(K%*%solve(J)))
+  
   
   # ---------------------- Clustered ------------------------
   # the derivative of log likelihood per cluster cgi [n*p]
@@ -88,7 +92,7 @@ vcov.robust.xy <- function(x,y,b,c){
   # estimated number of parameters
   cdof <- sum(diag(cK%*%solve(J)))
   
-  # AIC
+  # NIC
   nic <- deviance + 2*cdof
   
   # calculate NIC

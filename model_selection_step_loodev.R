@@ -21,7 +21,7 @@ for(u in c("nic", "ass", "stp", "lss", "do")){
 source("./sim_conditions_model_selection.R")
 sim_condition = simulation_conditions[which(simulation_conditions$id==1),]
 
-run_wrapper_lr <- function(sim_condition) {
+run_wrapper_lr <- function(sim_condition, overfit_type = c("poly","rcs", "random")[1]) {
   results_list = list()
   for(i in 1:sim_condition$iter){
     results_list[[i]] <- "null"
@@ -37,7 +37,7 @@ run_wrapper_lr <- function(sim_condition) {
                              sim_condition$na_rate)
         
         # add overfit predictors with high order poly
-        res <- generate_overfit(res)
+        res <- generate_overfit(res, type = overfit_type)
         
         # lr model selection
         df <- as.data.frame(res$data)
@@ -81,7 +81,7 @@ run_wrapper_lr <- function(sim_condition) {
   return(toReturn)
 }
 
-run_wrapper_lm <- function(sim_condition) {
+run_wrapper_lm <- function(sim_condition, overfit_type = c("poly","rcs", "random")[1]) {
   results_list = list()
   for(i in 1:sim_condition$iter){
     results_list[[i]] <- "null"
@@ -97,7 +97,7 @@ run_wrapper_lm <- function(sim_condition) {
                              sim_condition$na_rate)
         
         # add overfit predictors with high order poly
-        res <- generate_overfit(res)
+        res <- generate_overfit(res, type = overfit_type)
         
         # lr model selection
         df <- as.data.frame(res$data)

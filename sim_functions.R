@@ -309,7 +309,7 @@ calculate_se_accuracy <- function(res, m0, m1){
 }
 
 
-generate_overfit <- function(res, nd = 5, type = c("poly","rcs")[1]){
+generate_overfit <- function(res, nd = 5, type = c("poly","rcs", "random")[1]){
   res$data_org <- res$data
   # for each of the randome effect predictors add poly 5
   for(rdm in grep("^rdm\\d+$", colnames(res$data), value = TRUE) ){
@@ -318,6 +318,9 @@ generate_overfit <- function(res, nd = 5, type = c("poly","rcs")[1]){
     }
     if(type=="rcs"){
       over_mat <- as.matrix(rms::rcs(res$data[,rdm],nd),nrow=nrow(res$data), ncol=nd)
+    }
+    if(type=="random"){
+      over_mat <- matrix(rnorm(nrow(res$data)*2, 0, 1),nrow=nrow(res$data), ncol=2)
     }
     colnames(over_mat) <- paste0(rdm,c(1:ncol(over_mat)))
     res$data <- cbind(res$data, over_mat)

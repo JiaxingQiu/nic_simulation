@@ -17,6 +17,7 @@
 
 
 # # output_run_lm_2days_2024-04-13 22_04_11.920463.RDS
+# # output_run_lr_5days_2024-04-21 09_50_45.600947.RDS
 # # Parameters
 # n_cluster <- c(50) #c(50, 100) # number of clusters
 # n_obs_per_cluster <- c(5, 10, 30, 50, 80) # number of observations per cluster
