@@ -1,7 +1,7 @@
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rm(list=ls())
 model_size = 5
-cluster_size = 150 # or 150 # 
+cluster_size = 10 # or 5 # or150
 source("./model_selection_step_loodev.R")# step-wise by loodev
 # source("./model_selection_lasso.R")# lasso 
 # source("./model_selection_R2.R")# r2 

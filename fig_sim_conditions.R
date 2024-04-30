@@ -48,7 +48,7 @@ for(rn in c("lm","lr")){
   
   plot_df$ic_type <- stringr::str_to_upper(gsub("_diff","",plot_df$ic_type))
   plot_df$ic_type <- factor(plot_df$ic_type, levels=c("NIC","AIC","BIC"))
-  levels(plot_df$ic_type) <- c("rNIC","AIC","BIC")
+  levels(plot_df$ic_type) <- c("NICc","AIC","BIC")
   plot_df$ar1_phi <- paste0("AR1(",plot_df$ar1_phi,")")
   plot_df$ar1_phi <- factor(plot_df$ar1_phi, levels = c("AR1(0)", "AR1(0.4)", "AR1(0.8)"))
   # plot_df$na_rate_factor <- factor(plot_df$na_rate, levels = c(0, 1))
@@ -63,16 +63,23 @@ for(rn in c("lm","lr")){
     scale_x_continuous(limits = c(min(plot_df$n_ttl_betas), max(plot_df$n_ttl_betas)), breaks = seq(min(plot_df$n_ttl_betas), max(plot_df$n_ttl_betas), 1)) +
     coord_trans(y = "sqrt") +
     facet_wrap(~ar1_phi + n_obs_per_cluster, ncol=5, nrow=3, scales="free_x") + 
-    labs(title = ifelse(rn=="lr", "Binomial", "Gaussian"),
-         x = "Number of Predictors", 
+    labs(subtitle = ifelse(rn=="lr", "Binomial", "Gaussian"),
+         x = "Generating Model Size", 
          y = "Error = |IC - looDeviance|",
          color = "Criterion",
          linetype="Cluster") + 
     theme_bw()+
-    scale_color_manual(values = c("rNIC" = "red", "AIC" = "blue", "BIC" = "darkorange", "looDeviance" = "black", "Deviance" = "gray")) +
-    theme(text = element_text(face = "bold"))
+    scale_color_manual(values = c("NICc" = "red", "AIC" = "blue", "BIC" = "darkorange", "looDeviance" = "black", "Deviance" = "gray")) +
+    theme(text = element_text(face = "bold"),
+          plot.subtitle = element_text(size=12, face="bold"),
+          axis.title = element_text(size=12),
+          axis.text = element_text(size=10),
+          legend.title = element_text(size=12), 
+          legend.text = element_text(size=10))
 }
 
 
 p <- ggarrange(plotlist = plot_ls, nrow=2,ncol=1, common.legend = T,legend = "right")
+p <- annotate_figure(p, top = text_grob("Error in approximating out-of-cluster performance", size = 14, face = "bold"))
+
 p %>% ggsave(filename=paste0("./res/nic_vs_aic.png"), width = 8, height = 13, bg="white")

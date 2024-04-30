@@ -7,8 +7,8 @@ library(ggplot2)
 library(tidyr)
 library(ggpubr)
 
-lr_output_fname <- "output_run_lr_5days_2024-04-22 09_03_32.70004.RDS"
-lm_output_fname <- "output_run_lm_2days_2024-04-22 09_03_30.143472.RDS"
+lr_output_fname <- "output_run_lr_5days_2024-04-26 09_26_53.793405.RDS"
+lm_output_fname <- "output_run_lm_2days_2024-04-26 09_26_50.318184.RDS"
 
 agg_df_ls <- list()
 for(rn in c("lr", "lm")){ 
@@ -40,11 +40,11 @@ for(rn in c("lr", "lm")){
               )
   summa <- function(df){
     for(cl in c("nic_diff", "aic_diff", "bic_diff") ){
-      df[[paste0(cl,"_mean")]] <- mean(df[[cl]])
-      df[[paste0(cl,"_median")]] <- median(df[[cl]])
-      df[[paste0(cl,"_q25")]] <- quantile(df[[cl]],0.25)
-      df[[paste0(cl,"_q75")]] <- quantile(df[[cl]],0.75)
-      df[[paste0(cl,"_se")]] <- sd(df[[cl]])/nrow(df)
+      df[[paste0(cl,"_mean")]] <- mean(df[[cl]], na.rm=T)
+      df[[paste0(cl,"_median")]] <- median(df[[cl]], na.rm=T)
+      df[[paste0(cl,"_q25")]] <- quantile(df[[cl]],0.25, na.rm=T)
+      df[[paste0(cl,"_q75")]] <- quantile(df[[cl]],0.75, na.rm=T)
+      df[[paste0(cl,"_se")]] <- sd(df[[cl]], na.rm=T)/nrow(df)
     }
     return(df)
   }
