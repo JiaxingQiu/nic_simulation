@@ -49,6 +49,7 @@ modified_stepwise_glm_backward_parallel <- function(df,
       # ---- eval ----
       if(eval_by == "NIC") { tune_score <- NIC(mdl, family=family)$nic }
       if(eval_by == "AIC") { tune_score <- NIC(mdl, family=family)$aic }
+      if(eval_by == "NICc") { tune_score <- NIC(mdl, family=family)$nicc }
       if(eval_by == "BIC") { tune_score <- BIC(mdl) }
       if(eval_by == "Deviance") { tune_score <- NIC(mdl, family=family)$dev }
       if(eval_by %in% c("cvpred","cvDeviance") ){

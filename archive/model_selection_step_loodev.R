@@ -47,35 +47,19 @@ run_wrapper_lr <- function(sim_condition, overfit_type = c("poly","rcs", "random
         rdm_vars <- grep("^rdm\\d+$", colnames(res$data), value = TRUE)
         
         # step-wise forward 
-        res_df <- NULL
-        for(cr in c("AIC", "BIC", "NIC", "NICc", "looDeviance") ){
-          m1_sl <- modified_stepwise_glm_parallel(df = df,
-                                                  y = "y",
-                                                  x = c(fix_vars, rdm_vars),
-                                                  c = "cl", 
-                                                  maxstep = min(30,length(c(fix_vars, rdm_vars))),
-                                                  eval_ls=c(cr,"Deviance"),
-                                                  eval_by=cr,
-                                                  family = "binomial",
-                                                  forward = T,
-                                                  free_cores = 2)
-          
-          res_df_cr <- format_forward(m1_sl)
-          colnames(res_df_cr)[which(colnames(res_df_cr)=="x_picked")] <- paste0(cr,"_x_picked")
-          x_picked_cn <- paste0(cr,"_x_picked")
-          if(cr == "looDeviance"){
-            cr = c(gsub("iance","",cr),"dev")
-          }
-          cr <- stringr::str_to_lower(cr)
-          if(is.null(res_df)) {
-            res_df <- res_df_cr[,c("model_size",x_picked_cn, cr)]
-          }else{
-            res_df <- merge(res_df, res_df_cr[,c("model_size",x_picked_cn,cr)])
-          }
-        }
+        m1_sl <- modified_stepwise_glm_parallel(df = df,
+                                                y = "y",
+                                                x = c(fix_vars, rdm_vars),
+                                                c = "cl", 
+                                                maxstep = min(30,length(c(fix_vars, rdm_vars))),
+                                                eval_ls=c("looDeviance"), #"Deviance", "AIC", "BIC", "NIC", 
+                                                eval_by="looDeviance",
+                                                family = "binomial",
+                                                forward = T,
+                                                free_cores = 2)
         
-        # # fix tails in last 2 steps of loodev
-        # res_df$loodev[res_df$model_size>(max(res_df$model_size)-1)] <- res_df$loodev[res_df$model_size==(max(res_df$model_size)-1)]
+        
+        res_df <- format_forward(m1_sl)
         stopifnot(!detect_mal(res_df, sim_condition))
         
         res_df$id <- sim_condition$id
@@ -125,34 +109,17 @@ run_wrapper_lm <- function(sim_condition, overfit_type = c("poly","rcs", "random
         rdm_vars <- grep("^rdm\\d+$", colnames(res$data), value = TRUE)
         
         # step-wise forward 
-        res_df <- NULL
-        for(cr in c("AIC", "BIC", "NIC", "NICc", "looDeviance") ){
-          m1_sl <- modified_stepwise_glm_parallel(df = df,
-                                                  y = "y",
-                                                  x = c(fix_vars, rdm_vars),
-                                                  c = "cl", 
-                                                  maxstep = min(30,length(c(fix_vars, rdm_vars))),
-                                                  eval_ls=c(cr,"Deviance"),
-                                                  eval_by=cr,
-                                                  family = "gaussian",
-                                                  forward = T,
-                                                  free_cores = 2)
-          
-          res_df_cr <- format_forward(m1_sl)
-          colnames(res_df_cr)[which(colnames(res_df_cr)=="x_picked")] <- paste0(cr,"_x_picked")
-          x_picked_cn <- paste0(cr,"_x_picked")
-          if(cr == "looDeviance"){
-            cr = c(gsub("iance","",cr),"dev")
-          }
-          cr <- stringr::str_to_lower(cr)
-          if(is.null(res_df)) {
-            res_df <- res_df_cr[,c("model_size",x_picked_cn, cr)]
-          }else{
-            res_df <- merge(res_df, res_df_cr[,c("model_size",x_picked_cn,cr)])
-          }
-        }
-        # # fix tails in last 2 steps of loodev
-        # res_df$loodev[res_df$model_size>(max(res_df$model_size)-1)] <- res_df$loodev[res_df$model_size==(max(res_df$model_size)-1)]
+        m1_sl <- modified_stepwise_glm_parallel(df = df,
+                                                y = "y",
+                                                x = c(fix_vars, rdm_vars),
+                                                c = "cl", 
+                                                maxstep = min(30,length(c(fix_vars, rdm_vars))),
+                                                eval_ls=c("Deviance", "AIC", "BIC", "NIC", "looDeviance"),
+                                                eval_by="looDeviance",
+                                                family = "gaussian",
+                                                forward = T,
+                                                free_cores = 1)
+        res_df <- format_forward(m1_sl)
         stopifnot(!detect_mal(res_df, sim_condition))
         res_df$id <- sim_condition$id
         res_df$iter <- i

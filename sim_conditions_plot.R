@@ -1,6 +1,4 @@
 plot_ls <- list()
-r <- rev(c(0.5, 1, 5, 10))[1]
-na <- c(0,1)[1]
 for(rn in c("lm","lr")){ 
   agg_df <- agg_df_ls[[rn]]
   # # use mean and se
@@ -82,4 +80,3 @@ for(rn in c("lm","lr")){
 p <- ggarrange(plotlist = plot_ls, nrow=2,ncol=1, common.legend = T,legend = "right")
 p <- annotate_figure(p, top = text_grob("Error in approximating out-of-cluster performance", size = 14, face = "bold"))
 
-p %>% ggsave(filename=paste0("./res/nic_vs_aic.png"), width = 8, height = 13, bg="white")

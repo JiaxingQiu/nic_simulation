@@ -64,7 +64,7 @@ vcov.robust.xy <- function(x,y,b,c){
   aic <- deviance + 2*dof
   
   # NIC(AIC)
-  anic <- deviance + 2*sum(diag(K%*%solve(J)))
+  nic <- deviance + 2*sum(diag(K%*%solve(J)))
   
   
   # ---------------------- Clustered ------------------------
@@ -93,7 +93,7 @@ vcov.robust.xy <- function(x,y,b,c){
   cdof <- sum(diag(cK%*%solve(J)))
   
   # NIC
-  nic <- deviance + 2*cdof
+  nicc <- deviance + 2*cdof
   
   # calculate NIC
   return(list(deviance = deviance,
@@ -105,6 +105,7 @@ vcov.robust.xy <- function(x,y,b,c){
               cHScov = cHScov,
               cdof = cdof,
               aic = aic,
-              nic = nic))
+              nic = nic,
+              nicc = nicc))
   
 }

@@ -75,6 +75,7 @@ run_wrapper <- function(sim_condition) {
                                bic0 = m0$bic,
                                bic1 = m1$bic,
                                nic1 = m1$nic,
+                               nicc1 = m1$nicc,
                                dev0 = m0$deviance,
                                dev1 = m1$deviance,
                                loopred0 = m0$loopred,

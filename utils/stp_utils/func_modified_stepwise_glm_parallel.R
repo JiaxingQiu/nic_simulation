@@ -19,10 +19,10 @@ modified_stepwise_glm_parallel <- function(df,
                            c,
                            forward = T, 
                            maxstep = NULL,
-                           eval_ls = c("Deviance", "AIC", "BIC", "NIC", 
+                           eval_ls = c("Deviance", "AIC", "BIC", "NIC", "NICc", 
                                      "cvpred", "cvDeviance",
                                      "loopred", "looDeviance")[1:6], # loopred = looauc if binomial, loopred = loomse if gaussian 
-                           eval_by = c("Deviance", "AIC", "BIC", "NIC", 
+                           eval_by = c("Deviance", "AIC", "BIC", "NIC", "NICc", 
                                        "cvpred", "cvDeviance",
                                        "loopred", "looDeviance")[4],
                            nfold=10, # default 10 fold cv for "cvpred" and "cvDeviance"
@@ -67,6 +67,7 @@ modified_stepwise_glm_parallel <- function(df,
         # ---- eval ----
         if(eval_by == "NIC") { tune_score <- NIC(mdl, family=family)$nic }
         if(eval_by == "AIC") { tune_score <- NIC(mdl, family=family)$aic }
+        if(eval_by == "NICc") { tune_score <- NIC(mdl, family=family)$nicc }
         if(eval_by == "BIC") { tune_score <- BIC(mdl) }
         if(eval_by == "Deviance") { tune_score <- NIC(mdl, family=family)$dev }
         if(eval_by %in% c("cvpred","cvDeviance") ){
@@ -114,7 +115,7 @@ modified_stepwise_glm_parallel <- function(df,
       x_pick_vec <- unlist(lapply(tune_ls[[st]], function(e){return(e$x_pick)}))
       if(eval_by %in% c("cvpred","loopred") ) tune_vec <- -tune_vec
       x_pick <- x_pick_vec[which(tune_vec==min(tune_vec))][1]
-      at_score <- unlist(lapply(tune_ls[[st]], function(e){return(e$tune_score)}))[which(tune_vec==min(tune_vec))]
+      at_score <- unlist(lapply(tune_ls[[st]], function(e){return(e$tune_score)}))[which(tune_vec==min(tune_vec))][1]
       # ---- calculate other matrices with current setting ----
       x_picked <- c(x_picked, x_pick)
       x_left <- setdiff(x_left, x_pick)

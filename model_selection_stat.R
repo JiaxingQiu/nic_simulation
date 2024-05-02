@@ -10,11 +10,13 @@ for(sn in c("lm","lr")){
     diff_model_size <- bind_rows(diff_model_size,
                                      data.frame(iter = i,
                                                 nic = best_df$best_size[which(best_df$score=="nic")] -  best_df$best_size[which(best_df$score=="loodev")],
+                                                nicc = best_df$best_size[which(best_df$score=="nicc")] -  best_df$best_size[which(best_df$score=="loodev")],
                                                 aic = best_df$best_size[which(best_df$score=="aic")] -  best_df$best_size[which(best_df$score=="loodev")],
                                                 bic = best_df$best_size[which(best_df$score=="bic")] -  best_df$best_size[which(best_df$score=="loodev")]))
     diff_model_size_1se <- bind_rows(diff_model_size_1se,
                                      data.frame(iter = i,
                                                 nic = best_df$best_size_1se_min[which(best_df$score=="nic")] -  best_df$best_size_1se_min[which(best_df$score=="loodev")],
+                                                nicc = best_df$best_size_1se_min[which(best_df$score=="nicc")] -  best_df$best_size_1se_min[which(best_df$score=="loodev")],
                                                 aic = best_df$best_size_1se_min[which(best_df$score=="aic")] -  best_df$best_size_1se_min[which(best_df$score=="loodev")],
                                                 bic = best_df$best_size_1se_min[which(best_df$score=="bic")] -  best_df$best_size_1se_min[which(best_df$score=="loodev")]))
     
@@ -22,17 +24,17 @@ for(sn in c("lm","lr")){
   # best model by min
   diff_model_size_long <- diff_model_size %>%
     pivot_longer(
-      cols = c(nic, aic, bic),  # Specify columns to lengthen
+      cols = c(nicc, nic, aic, bic),  # Specify columns to lengthen
       names_to = "score",  # New column for the names
       values_to = "value"  # New column for the values
     )
-  diff_model_size_long$score <- factor(diff_model_size_long$score, levels = c("nic","bic","aic"))
-  levels(diff_model_size_long$score) <- c("NICc", "BIC","AIC")
+  diff_model_size_long$score <- factor(diff_model_size_long$score, levels = c("nicc","nic","aic","bic"))
+  levels(diff_model_size_long$score) <- c("NICc","NIC","AIC", "BIC")
   pl[[sn]] <- ggplot(diff_model_size_long, aes(x=value, group=score, fill=score))+
     geom_histogram(binwidth=1) +
     geom_vline(aes(xintercept = 0),color="black")+
-    facet_wrap(~score)+
-    scale_fill_manual(values = c("NICc" = "red", "AIC" = "blue", "BIC" = "orange")) +
+    facet_wrap(~score, nrow=1,ncol=4)+
+    scale_fill_manual(values = c("NICc" = "red", "NIC" = "lightblue3", "AIC"="blue", "BIC" = "orange")) +
     theme_minimal() +
     labs(#subtitle = ifelse(sn=="lm", "Gaussian", "Binomial"), 
          x = paste0("Error in model size selected by the Minimal"), y = "Count", fill = "Criteria")+
@@ -45,17 +47,17 @@ for(sn in c("lm","lr")){
   # best model by 1se
   diff_model_size_long <- diff_model_size_1se %>%
     pivot_longer(
-      cols = c(nic, aic, bic),  # Specify columns to lengthen
+      cols = c(nicc, nic, aic, bic),  # Specify columns to lengthen
       names_to = "score",  # New column for the names
       values_to = "value"  # New column for the values
     )
-  diff_model_size_long$score <- factor(diff_model_size_long$score, levels = c("nic","bic","aic"))
-  levels(diff_model_size_long$score) <- c("NICc", "BIC","AIC")
+  diff_model_size_long$score <- factor(diff_model_size_long$score, levels = c("nicc","nic","aic","bic"))
+  levels(diff_model_size_long$score) <- c("NICc","NIC","AIC", "BIC")
   pl_1se[[sn]] <- ggplot(diff_model_size_long, aes(x=value, group=score, fill=score))+
     geom_histogram(binwidth=1) +
     geom_vline(aes(xintercept = 0),color="black")+
-    facet_wrap(~score)+
-    scale_fill_manual(values = c("NICc" = "red", "AIC" = "blue", "BIC" = "orange")) +
+    facet_wrap(~score, nrow=1,ncol=4)+
+    scale_fill_manual(values = c("NICc" = "red", "NIC" = "lightblue3", "AIC"="blue", "BIC" = "orange")) +
     theme_minimal() +
     labs(#subtitle = ifelse(sn=="lm", "Gaussian", "Binomial"),
          x = paste0("Error in model size selected by 1SE"), y = "Count", fill = "Criteria") +

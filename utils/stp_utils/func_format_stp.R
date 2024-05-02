@@ -6,6 +6,7 @@ format_forward <- function(fwd_obj){
   aic <- c()
   bic <- c()
   nic <- c()
+  nicc <- c()
   cvpred <- c()
   cvdev <- c()
   loopred <- c()
@@ -17,6 +18,7 @@ format_forward <- function(fwd_obj){
     aic <- c(aic, fwd_obj$res_ls[[s]][[paste0("s",s)]][[1]]$AIC)
     bic <- c(bic, fwd_obj$res_ls[[s]][[paste0("s",s)]][[1]]$BIC)
     nic <- c(nic, fwd_obj$res_ls[[s]][[paste0("s",s)]][[1]]$NIC)
+    nicc <- c(nicc, fwd_obj$res_ls[[s]][[paste0("s",s)]][[1]]$NICc)
     cvpred <- c(cvpred, fwd_obj$res_ls[[s]][[paste0("s",s)]][[1]]$cvpred)
     cvdev <- c(cvdev, fwd_obj$res_ls[[s]][[paste0("s",s)]][[1]]$cvDeviance)
     loopred <- c(loopred, fwd_obj$res_ls[[s]][[paste0("s",s)]][[1]]$loopred)
@@ -27,6 +29,7 @@ format_forward <- function(fwd_obj){
   if(length(aic)>0) df$aic <- aic
   if(length(bic)>0) df$bic <- bic
   if(length(nic)>0) df$nic <- nic
+  if(length(nicc)>0) df$nicc <- nicc
   if(length(cvpred)>0) df$cvpred <- cvpred
   if(length(cvdev)>0) df$cvdev <- cvdev
   if(length(loopred)>0) df$loopred <- loopred

@@ -17,7 +17,7 @@ all_subset_glm_parallel <- function(df,
                            x,
                            c,
                            size=NULL,
-                           eval_ls=c("Deviance", "AIC", "BIC", "NIC", 
+                           eval_ls=c("Deviance", "AIC", "BIC", "NIC", "NICc",
                                    "cvpred", "cvDeviance",
                                    "loopred", "looDeviance")[1:6],
                            nfold=10, # default 10 fold cv for "cvpred" and "cvDeviance"
@@ -40,6 +40,7 @@ all_subset_glm_parallel <- function(df,
                   AIC=NULL,
                   BIC=NULL,
                   NIC=NULL,
+                  NICc=NULL,
                   cvpred=NULL,
                   cvDeviance=NULL,
                   loopred = NULL,
@@ -66,14 +67,15 @@ all_subset_glm_parallel <- function(df,
       
       
       # ---- eval ----
-      if( length(intersect(c("NIC","AIC","BIC","Deviance"),eval_ls))>0){
+      if( length(intersect(c("NIC","NICc","AIC","BIC","Deviance"),eval_ls))>0){
         ics <- NIC(mdl, family=family)
         res$AIC <- ics$aic
         res$NIC <- ics$nic
+        res$NICc <- ics$nicc
         res$Deviance <- ics$dev
         res$BIC <- BIC(mdl)
       }
-      eval_extra <- setdiff(eval_ls, c("NIC","AIC","BIC","Deviance"))
+      eval_extra <- setdiff(eval_ls, c("NIC","NICc","AIC","BIC","Deviance"))
       if(length(eval_extra)>0){
         for(e in eval_extra){
           if(e %in% c("cvpred","cvDeviance") ){

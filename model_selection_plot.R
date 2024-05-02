@@ -1,87 +1,47 @@
 
-# aggregation plot
-p_agg <- list()
-for(sn in c("lm","lr") ){
-  # Plot using stat_summary and stat_summary_ribbon
-  res_df_iter_long <- res_df_iter[[sn]] %>%
-    dplyr::select(model_size, nic, aic, bic, loodev, iter) %>%
-    pivot_longer(
-      cols = c(nic, aic, bic, loodev),  # Specify columns to lengthen
-      names_to = "score",  # New column for the names
-      values_to = "value"  # New column for the values
-    )
-  # Function to calculate mean and standard error
-  mean_se <- function(x) {
-    n <- length(x)
-    se <- sd(x) / sqrt(n)
-    return(c(y = mean(x), ymin = mean(x) - se, ymax = mean(x) + se))
-  }
-  res_df_iter_long$score <- factor(res_df_iter_long$score, levels=c("loodev", "nic","bic","aic"))
-  levels(res_df_iter_long$score) <- c("looDeviance\n(baseline)", "NICc","BIC","AIC")
-  p_agg[[sn]] <- ggplot(res_df_iter_long, aes(x = model_size, y = value, color=score, fill=score)) +
-    stat_summary(fun = mean, geom = "line", linewidth = 1) +
-    stat_summary(fun.data = mean_se, geom = "ribbon", alpha = 0.2, color=NA) +
-    geom_vline(xintercept = 5, color = "grey") +
-    # geom_text(aes(x=0, y=8000, label="Mean +/- SE" ),hjust = 0, vjust = 0, size = 4, color="black") + 
-    # geom_vline(aes(xintercept = sim_condition$n_ttl_betas),color="black")+
-    labs(#title = ifelse(sn=="lm", "Gaussian", "Binomial"),
-         subtitle = "Mean +/- SE",
-         x = "Model size",
-         y = "Value (e+03)",
-         color="Criterion",
-         fill="Criterion") +
-    scale_color_manual(values = c("NICc" = "red", "AIC" = "blue", "BIC" = "orange", "looDeviance\n(baseline)" = "black")) +
-    scale_fill_manual(values = c("NICc" = "red", "AIC" = "blue", "BIC" = "orange", "looDeviance\n(baseline)" = "darkgray")) +
-    scale_y_continuous(breaks = function(x) {
-      seq(from = min(x), to = max(x), length.out = 5)
-    },labels = function(y) sprintf("%.2f", y / 1000) ) +
-    theme_minimal()+
-    theme(text = element_text(face = "bold"),
-          plot.subtitle = element_text(size=12, face="bold"),
-          axis.title = element_text(size=12),
-          axis.text = element_text(size=10),
-          legend.title = element_text(size=12), 
-          legend.text = element_text(size=10))
-}
-
-
+# # aggregation plot
 # p_agg <- list()
 # for(sn in c("lm","lr") ){
 #   # Plot using stat_summary and stat_summary_ribbon
 #   res_df_iter_long <- res_df_iter[[sn]] %>%
-#     dplyr::select(model_size, nic, aic, bic, loodev, iter) %>%
+#     dplyr::select(model_size, nic, nicc, aic, bic, loodev, iter) %>%
 #     pivot_longer(
-#       cols = c(nic, aic, bic, loodev),  # Specify columns to lengthen
+#       cols = c(nic, nicc, aic, bic, loodev),  # Specify columns to lengthen
 #       names_to = "score",  # New column for the names
 #       values_to = "value"  # New column for the values
 #     )
 #   
-#   res_df_iter_long$score <- factor(res_df_iter_long$score, levels=c("loodev", "nic","bic","aic"))
-#   levels(res_df_iter_long$score) <- c("looDeviance\n(baseline)", "NICc","BIC","AIC")
-#   
-#   summa <- function(df){
-#     df[["se"]] <- sd(df[["value"]],na.rm=T)/sqrt(nrow(df))
-#     df[["mean"]] <- mean(df[["value"]],na.rm=T)
-#     df <- distinct(df[,c("score", "model_size", "mean", "se")])
-#     return(df)
+#   # Function to calculate mean and standard error
+#   mean_se <- function(x) {
+#     n <- length(x)
+#     se <- sd(x) / sqrt(n)
+#     return(c(y = mean(x), ymin = mean(x) - se, ymax = mean(x) + se))
 #   }
-#   gb <- group_by(res_df_iter_long, model_size, score)
-#   plot_df <- do(gb, summa(.) )
-#   p_agg[[sn]] <- ggplot(plot_df, aes(x = model_size, y = mean, color=score, fill=score)) +
-#     geom_line() +
-#     geom_ribbon(aes(ymin = mean - se, ymax=mean+se), alpha = 0.2, color=NA)+
-#     geom_vline(xintercept = 5, color = "grey") +
-#     labs(#title = ifelse(sn=="lm", "Gaussian", "Binomial"),
-#       subtitle = "Mean +/- SE",
-#       x = "Model size",
-#       y = "Value (e+03)",
-#       color="Criterion",
-#       fill="Criterion") +
-#     scale_color_manual(values = c("NICc" = "red", "AIC" = "blue", "BIC" = "orange", "looDeviance\n(baseline)" = "black")) +
-#     scale_fill_manual(values = c("NICc" = "red", "AIC" = "blue", "BIC" = "orange", "looDeviance\n(baseline)" = "darkgray")) +
-#     scale_y_continuous(breaks = function(x) {
-#       seq(from = min(x), to = max(x), length.out = 5)
-#     },labels = function(y) sprintf("%.2f", y / 1000) ) +
+#   res_df_iter_long$score <- factor(res_df_iter_long$score, levels=c("loodev","nicc", "nic","aic","bic"))
+#   levels(res_df_iter_long$score) <- c("looDeviance\n(baseline)","NICc", "NIC", "AIC", "BIC")
+#   x <- res_df_iter_long$value[which(res_df_iter_long$score=="looDeviance\n(baseline)" & res_df_iter_long$model_size==1)]
+#   ymax = mean(x) + sd(x) / sqrt(length(x))
+#   x <- res_df_iter_long$value[which(res_df_iter_long$score=="NIC" & res_df_iter_long$model_size==25)]
+#   ymin = mean(x) - sd(x) / sqrt(length(x))
+#   
+#   p_agg[[sn]] <- ggplot(res_df_iter_long, aes(x = model_size, y = value, color=score, fill=score)) +
+#     stat_summary(fun = mean, geom = "line", linewidth = 1) +
+#     stat_summary(fun.data = mean_se, geom = "ribbon", alpha = 0.2, color=NA) +
+#     #geom_vline(xintercept = 5, color = "grey") +
+#     # geom_text(aes(x=0, y=8000, label="Mean +/- SE" ),hjust = 0, vjust = 0, size = 4, color="black") + 
+#     # #geom_vline(aes(xintercept = sim_condition$n_ttl_betas),color="black")+
+#     labs(subtitle = "Mean +/- SE",
+#          x = "Model size",
+#          y = "Value (e+03)",
+#          color="Criterion",
+#          fill="Criterion") +
+#     scale_color_manual(values = c("NICc" = "red", "AIC"="blue", "NIC" = "lightblue3", "BIC" = "orange", "looDeviance\n(baseline)" = "black")) +
+#     scale_fill_manual(values = c("NICc" = "red", "AIC"="blue", "NIC" = "lightblue3", "BIC" = "orange", "looDeviance\n(baseline)" = "darkgray")) +
+#     scale_y_continuous(
+#       breaks = function(x) {
+#       seq(from = min(x), to = max(x), length.out = 5)},
+#       labels = function(y) sprintf("%.2f", y / 1000) ) +
+#     ylim(ymin,ymax)+
 #     theme_minimal()+
 #     theme(text = element_text(face = "bold"),
 #           plot.subtitle = element_text(size=12, face="bold"),
@@ -91,6 +51,62 @@ for(sn in c("lm","lr") ){
 #           legend.text = element_text(size=10))
 # }
 
+
+p_agg <- list()
+for(sn in c("lm","lr") ){
+  # Plot using stat_summary and stat_summary_ribbon
+  res_df_iter_long <- res_df_iter[[sn]] %>%
+    dplyr::select(model_size, nic, nicc, aic, bic, loodev, iter) %>%
+    pivot_longer(
+      cols = c(nic, nicc, aic, bic, loodev),  # Specify columns to lengthen
+      names_to = "score",  # New column for the names
+      values_to = "value"  # New column for the values
+    )
+
+  res_df_iter_long$score <- factor(res_df_iter_long$score, levels=c("loodev","nicc", "nic","aic","bic"))
+  levels(res_df_iter_long$score) <- c("looDeviance\n(baseline)","NICc", "NIC", "AIC", "BIC")
+  x <- res_df_iter_long$value[which(res_df_iter_long$score=="looDeviance\n(baseline)" & res_df_iter_long$model_size==ifelse(cluster_size==150, 1, 25))]
+  ymax = mean(x) + 2*sd(x) / sqrt(length(x))
+  x <- res_df_iter_long$value[which(res_df_iter_long$score=="NIC" & res_df_iter_long$model_size==ifelse(cluster_size==150, 25, 10) )]
+  ymin = mean(x) - 2*sd(x) / sqrt(length(x))
+  
+  summa <- function(df){
+    df[["se"]] <- sd(df[["value"]],na.rm=T)/sqrt(nrow(df))
+    df[["mean"]] <- mean(df[["value"]],na.rm=T)
+    df <- distinct(df[,c("score", "model_size", "mean", "se")])
+    return(df)
+  }
+  gb <- group_by(res_df_iter_long, model_size, score)
+  plot_df <- do(gb, summa(.) )
+  p_agg[[sn]] <- ggplot(plot_df, aes(x = model_size, y = mean, color=score, fill=score)) +
+    geom_line(linewidth = 1) +
+    geom_ribbon(aes(ymin = mean - se, ymax=mean+se), alpha = 0.2, color=NA)+
+    #geom_vline(xintercept = 5, color = "grey") +
+    labs(#title = ifelse(sn=="lm", "Gaussian", "Binomial"),
+      subtitle = "Mean +/- SE",
+      x = "Model size",
+      y = "Value (e+03)",
+      color="Criterion",
+      fill="Criterion") +
+    scale_color_manual(values = c("NICc" = "red", "AIC"="blue", "NIC" = "lightblue3", "BIC" = "orange", "looDeviance\n(baseline)" = "black")) +
+    scale_fill_manual(values = c("NICc" = "red", "AIC"="blue", "NIC" = "lightblue3", "BIC" = "orange", "looDeviance\n(baseline)" = "darkgray")) +
+    scale_y_continuous(
+      limits = c(ymin,ymax),
+      breaks = function(x) {
+      seq(from = min(x), to = max(x), length.out = 5)
+    },labels = function(y) sprintf("%.2f", y / 1000) ) +
+    theme_minimal()+
+    theme(text = element_text(face = "bold"),
+          plot.subtitle = element_text(size=12, face="bold"),
+          axis.title = element_text(size=12),
+          axis.text = element_text(size=10),
+          legend.title = element_text(size=12),
+          legend.text = element_text(size=10))
+}
+
+
+
+
 pie <- list()
 for(sn in c("lm", "lr")){
   pl <- list()
@@ -99,25 +115,30 @@ for(sn in c("lm", "lr")){
     res_df <- res_df_iter[[sn]][which(res_df_iter[[sn]]$iter==i),]
     res_df_long <- res_df %>%
       pivot_longer(
-        cols = c(nic, aic, bic, dev, loodev),  # Specify columns to lengthen
+        cols = c(nic, aic, nicc, bic, dev, loodev),  # Specify columns to lengthen
         names_to = "score",  # New column for the names
         values_to = "value"  # New column for the values
       )
     best_df <- best_df_iter[[sn]][which(best_df_iter[[sn]]$i==i),]
     # ymin <- res_df_long$value[which(res_df_long$value == min(res_df_long$value[res_df_long$score=="dev"]) )][1]
     # ymax <- res_df_long$value[res_df_long$score=="loodev"&res_df_long$model_size==1]
-    res_df_long$score <- factor(res_df_long$score, levels=c("loodev", "nic","bic","aic","dev"))
-    levels(res_df_long$score) <- c("looDeviance\n(baseline)", "NICc","BIC","AIC", "Deviance")
-    best_df$score <- factor(best_df$score, levels=c("loodev", "nic","bic","aic","dev"))
-    levels(best_df$score) <- c("looDeviance\n(baseline)", "NICc","BIC","AIC", "Deviance")
+    res_df_long$score <- factor(res_df_long$score, levels=c("loodev","nicc", "nic","aic","bic","dev"))
+    levels(res_df_long$score) <- c("looDeviance\n(baseline)","NICc", "NIC", "AIC", "BIC", "Deviance")
+    best_df$score <- factor(best_df$score, levels=c("loodev","nicc", "nic","aic","bic","dev"))
+    levels(best_df$score) <- c("looDeviance\n(baseline)","NICc", "NIC", "AIC", "BIC", "Deviance")
+    
+    ymax <- res_df_long$value[which(res_df_long$score=="looDeviance\n(baseline)" & res_df_long$model_size==1)] + 100
+    ymin <- res_df_long$value[which(res_df_long$score=="NIC" & res_df_long$model_size==25)] - 50
     
     pl[[i]] <- ggplot(res_df_long, aes(x = model_size, y = value, group = score, color = score)) +
       geom_line() +
-      geom_vline(xintercept = 5, color = "grey") +
-      scale_color_manual(values = c("NICc" = "red", "AIC" = "blue", "BIC" = "orange", "looDeviance\n(baseline)" = "black", "Deviance" = "gray")) +
+      #geom_vline(xintercept = 5, color = "grey") +
+      scale_color_manual(values = c("NICc" = "red", "AIC" = "blue","NIC" = "lightblue3", "BIC" = "orange", "looDeviance\n(baseline)" = "black", "Deviance" = "gray")) +
       theme_minimal() +
       # scale_y_continuous(labels = scales::scientific_format()) +
-      scale_y_continuous(breaks = function(x) {
+      scale_y_continuous(
+        limits = c(ymin,ymax),
+        breaks = function(x) {
         seq(from = min(x), to = max(x), length.out = 5)
       },labels = function(y) sprintf("%.2f", y / 1000) ) +
       geom_errorbar(data = best_df, aes(x = best_size, xmin=best_size_1se_min, xmax=best_size_1se_max, y = best_score, color=score))+
@@ -140,10 +161,10 @@ for(sn in c("lm", "lr")){
   # ggarrange(plotlist = pl[61:80],nrow=4, ncol=5,common.legend = T, legend = "right")
   # ggarrange(plotlist = pl[81:100],nrow=4, ncol=5,common.legend = T, legend = "right")
 
-  # find 5 examples
+  # find 4 examples
   if(model_size==5 & cluster_size==150){
-    if(sn == "lm") ie <- c(2, 21, 45, 72)
-    if(sn == "lr") ie <- c(15, 57, 82, 87) # 11, 46, 64,  26, 
+    if(sn == "lm") ie <- c(1, 19, 60, 66) #, 38, 28
+    if(sn == "lr") ie <- c(33, 77, 82, 100) # 4, , 57
   }
   if(model_size==5 & cluster_size==5){
     if(sn == "lm") ie <- c(2, 33, 80, 100) #50

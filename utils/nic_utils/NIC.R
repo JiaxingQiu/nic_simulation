@@ -9,7 +9,8 @@ NIC <- function(mdl, family=c("binomial","gaussian")[1]){
     
     return(list("dev"=res$deviance,
                 "aic"=res$aic,
-                "nic"=res$nic,
+                "nic" = res$nic,
+                "nicc"=res$nicc,
                 "robcov" = res$cHScov,
                 "cov" = res$HScov ))
     

@@ -239,6 +239,7 @@ fit_eval_glm <- function(y, c, data, family=c("binomial","gaussian")[1]){
   nic_res <- NIC(mdl, family = family)
   deviance <- nic_res$dev
   nic <- nic_res$nic
+  nicc <- nic_res$nicc
   aic <- nic_res$aic
   bic <- BIC(mdl)
   vcov <- nic_res$robcov
@@ -274,6 +275,7 @@ fit_eval_glm <- function(y, c, data, family=c("binomial","gaussian")[1]){
   return(list("mdl"=mdl,
               "aic"=aic,
               "nic"=nic,
+              "nicc"=nicc,
               "bic"=bic,
               "deviance"= deviance,
               "loopred" = loopred,
@@ -350,8 +352,8 @@ detect_mal <- function(res_df, sim_condition){
   #     names_to = "score",  # New column for the names
   #     values_to = "value"  # New column for the values
   #   )
-  # ymin <- res_df_long$value[which(res_df_long$value == min(res_df_long$value[res_df_long$score=="dev"]) )][1]
-  # ymax <- res_df_long$value[res_df_long$score=="loodev"&res_df_long$model_size==1]
+  # # ymin <- res_df_long$value[which(res_df_long$value == min(res_df_long$value[res_df_long$score=="dev"]) )][1]
+  # # ymax <- res_df_long$value[res_df_long$score=="loodev"&res_df_long$model_size==1]
   # ggplot(res_df_long, aes(x = model_size, y = value, group = score, color = score)) +
   #   geom_line() +
   #   geom_line(data = filter(res_df_long, score == "loodev"), linetype = "dotted") +
@@ -360,8 +362,7 @@ detect_mal <- function(res_df, sim_condition){
   #   theme_minimal() +
   #   geom_errorbar(data = best_df, aes(x = best_size, xmin=best_size_1se_min, xmax=best_size_1se_max, y = best_score, color=score))+
   #   geom_point(data = best_df, aes(x = best_size, y = best_score, color=score), size = 3)+
-  #   labs(title = paste0("iter = ",i), x = "Model Size", y = "Value", color = "Score") +
-  #   ylim(ymin, ymax)
+  #   labs(title = paste0("iter = ",i), x = "Model Size", y = "Value", color = "Score")
   
   
   # sharp decrease in dev

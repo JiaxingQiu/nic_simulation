@@ -45,18 +45,44 @@ df_mdl <- df_mdl[complete.cases(df_mdl),]
 
 # ---- 100 fold ----
 if(!file.exists("./res/fwd_clustered_combined.RDS")){
-  fwd <- modified_stepwise_glm_parallel(df = df_mdl,
-                                 y = y_col,
-                                 x = x_cols,
-                                 c = c_col, 
-                                 maxstep = length(x_cols),
-                                 eval_ls=c("Deviance", "AIC", "BIC", "NIC", "cvpred", "cvDeviance"),
-                                 eval_by="cvDeviance",
-                                 nfold = 50,
-                                 family = "binomial",
-                                 forward = T,
-                                 free_cores = 2)
-  res_df <- format_forward(fwd)
+  # fwd <- modified_stepwise_glm_parallel(df = df_mdl,
+  #                                y = y_col,
+  #                                x = x_cols,
+  #                                c = c_col, 
+  #                                maxstep = length(x_cols),
+  #                                eval_ls=c("Deviance", "AIC", "BIC", "NIC", "NICc", "cvpred", "cvDeviance"),
+  #                                eval_by="cvDeviance",
+  #                                nfold = 50,
+  #                                family = "binomial",
+  #                                forward = T,
+  #                                free_cores = 1)
+  # step-wise forward 
+  res_df <- NULL
+  for(cr in c("AIC", "BIC", "NIC", "NICc", "looDeviance") ){
+    fwd <- modified_stepwise_glm_parallel(df = df_mdl,
+                                          y = y_col,
+                                          x = x_cols,
+                                          c = c_col,
+                                          maxstep = length(x_cols),
+                                          eval_ls = c(cr,"Deviance"),
+                                          eval_by = cr,
+                                          nfold = 50,
+                                          family = "binomial",
+                                          forward = T,
+                                          free_cores = 1)
+    
+    res_df_cr <- format_forward(fwd)
+    if(cr == "looDeviance"){
+      cr = c(gsub("iance","",cr),"dev")
+    }
+    cr <- stringr::str_to_lower(cr)
+    if(is.null(res_df)) {
+      res_df <- res_df_cr[,c("model_size", "x_picked", cr)]
+    }else{
+      res_df <- merge(res_df, res_df_cr[,c("model_size", "x_picked", cr)])
+    }
+  }
+  
   saveRDS(res_df, file="./res/fwd_clustered_combined.RDS")
 }
 

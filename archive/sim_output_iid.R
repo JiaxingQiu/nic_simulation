@@ -7,16 +7,15 @@ library(ggplot2)
 library(tidyr)
 library(ggpubr)
 
-lr_output_fname <- "output_run_lr_5days_2024-04-26 09_26_53.793405.RDS"
-lm_output_fname <- "output_run_lm_2days_2024-04-26 09_26_50.318184.RDS"
+lr_output_fname <- "output_run_lr_iid_2024-05-01 10_23_38.016975.RDS"
+lm_output_fname <- "output_run_lm_iid_2024-05-01 10_23_34.858694.RDS"
 
 agg_df_ls <- list()
 for(rn in c("lr", "lm")){ 
   if(rn == "lr") output <- readRDS(paste0("./res/", lr_output_fname))
   if(rn == "lm") output <- readRDS(paste0("./res/", lm_output_fname))
-  source("./sim_conditions.R")
+  source("./sim_conditions_iid.R")
   res_df <- merge(output, simulation_conditions, by="id", all.x=T)
-  res_df$nicc_diff <- abs(res_df$nicc1 - res_df$loodev1)
   res_df$nic_diff <- abs(res_df$nic1 - res_df$loodev1)
   res_df$aic_diff <- abs(res_df$aic1 - res_df$loodev1)
   res_df$bic_diff <- abs(res_df$bic1 - res_df$loodev1)
@@ -31,7 +30,6 @@ for(rn in c("lr", "lm")){
               bias1 = median(bias1), bias1_se = sd(bias1)/sqrt(niter),
               se_ratio0 = median(se_ratio0), se_ratio0_se = sd(se_ratio0)/sqrt(niter),
               se_ratio1 = median(se_ratio1), se_ratio1_se = sd(se_ratio1)/sqrt(niter),
-              nicc_diff = median(nicc_diff), nicc_diff_se = sd(nicc_diff)/sqrt(niter),
               nic_diff = median(nic_diff), nic_diff_se = sd(nic_diff)/sqrt(niter),
               aic_diff = median(aic_diff), aic_diff_se = sd(aic_diff)/sqrt(niter),
               bic_diff = median(bic_diff), bic_diff_se = sd(bic_diff)/sqrt(niter),
@@ -41,7 +39,7 @@ for(rn in c("lr", "lm")){
               loodev1 = median(loodev1), loodev1_se = sd(loodev1)/sqrt(niter)
               )
   summa <- function(df){
-    for(cl in c("nicc_diff", "nic_diff", "aic_diff", "bic_diff") ){
+    for(cl in c("nic_diff", "aic_diff", "bic_diff") ){
       df[[paste0(cl,"_mean")]] <- mean(df[[cl]], na.rm=T)
       df[[paste0(cl,"_median")]] <- median(df[[cl]], na.rm=T)
       df[[paste0(cl,"_q25")]] <- quantile(df[[cl]],0.25, na.rm=T)
@@ -61,12 +59,8 @@ for(rn in c("lr", "lm")){
   agg_df_ls[[rn]] <- merge(agg_df, simulation_conditions, by="id", all.x=T)
 }
 
-r <- rev(c(0.5, 1, 5, 10))[4]
-na <- c(0,1)[1]
-
-
+r <- 0
+na <- 1 
 source("./sim_conditions_plot.R")
 p
-p %>% ggsave(filename=paste0("./res/nic_vs_aic.png"), width = 8, height = 13, bg="white")
-
 
