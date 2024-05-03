@@ -28,8 +28,8 @@ for(rn in c("lm","lr")){
                                                                           "100 obs/cluster",
                                                                           "150 obs/cluster") )
   plot_df$ic_type <- stringr::str_to_upper(gsub("_diff","",plot_df$ic_type))
-  plot_df$ic_type <- factor(plot_df$ic_type, levels=c("NICC", "NIC","AIC","BIC"))
-  levels(plot_df$ic_type) <- c("NICc","NIC","AIC","BIC")
+  plot_df$ic_type <- factor(plot_df$ic_type, levels=c("NICC","AIC", "NIC","BIC"))
+  levels(plot_df$ic_type) <- c("NICc","AIC","NIC","BIC")
   plot_df$sigma_rdm_fix_ratio <- factor(plot_df$sigma_rdm_fix_ratio, levels=c(0.5, 1, 5, 10))
   levels(plot_df$sigma_rdm_fix_ratio) <- paste0("ratio=", c(0.5, 1, 5, 10))
   

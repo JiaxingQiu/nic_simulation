@@ -30,7 +30,6 @@ source("./sim_conditions.R")
 
 
 # for test: sim_condition = simulation_conditions[which(simulation_conditions$id==56),]
-# saveRDS(res, "./doug_lm_sim_data.RDS")
 
 run_wrapper_lm <- function(sim_condition) {
   results_list = list()

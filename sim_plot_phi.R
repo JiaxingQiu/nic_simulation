@@ -28,8 +28,8 @@ for(rn in c("lm","lr")){
                                                                           "100 obs/cluster",
                                                                           "150 obs/cluster") )
   plot_df$ic_type <- stringr::str_to_upper(gsub("_diff","",plot_df$ic_type))
-  plot_df$ic_type <- factor(plot_df$ic_type, levels=c("NICC", "NIC","AIC","BIC"))
-  levels(plot_df$ic_type) <- c("NICc","NIC","AIC","BIC")
+  plot_df$ic_type <- factor(plot_df$ic_type, levels=c("NICC","AIC", "NIC","BIC"))
+  levels(plot_df$ic_type) <- c("NICc","AIC","NIC","BIC")
   plot_df$ar1_phi <- factor(plot_df$ar1_phi, levels=c(0, 0.4, 0.8))
   levels(plot_df$ar1_phi) <- c("AR1(0)","AR1(0.4)","AR1(0.8)")
   plot_ls[[rn]] <- ggplot(data = plot_df, aes(x = n_ttl_betas, y = ic_diff, color = ic_type)) + 

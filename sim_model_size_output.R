@@ -18,7 +18,6 @@ for(cluster_size in c(weak_cluster_size,150)){
   best_df_iter <- list()
   for(sn in c("lm","lr")){
     res_df_iter[[sn]] <- readRDS(paste0("./res/",sigma_rdm_fix_ratio,"/model_select_",sn,"_",unique(sim_condition$n_ttl_betas),"_",unique(sim_condition$n_obs_per_cluster),en,".RDS"))
-    # res_df_iter[[sn]]$nicc <- res_df_iter[[sn]]$nic
     best_df_iter[[sn]] <- data.frame()
     for(i in sort(unique(res_df_iter[[sn]]$iter))){
       res_df <- res_df_iter[[sn]] %>% filter(iter==i) %>% as.data.frame()

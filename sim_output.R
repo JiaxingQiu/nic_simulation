@@ -16,7 +16,10 @@ for(rn in c("lr", "lm")){
   if(rn == "lm") output <- readRDS(paste0("./res/", lm_output_fname))
   source("./sim_conditions.R")
   res_df <- merge(output, simulation_conditions, by="id", all.x=T)
-  # res_df$nicc1 <- res_df$nic1 # comment out remember
+  if(!"nicc1" %in%colnames(res_df) ){
+    res_df$nicc1 <- res_df$nic1 # comment out remember
+    print("error : nic used for nicc ")
+  }
   res_df$nicc_diff <- abs(res_df$nicc1 - res_df$loodev1)
   res_df$nic_diff <- abs(res_df$nic1 - res_df$loodev1)
   res_df$aic_diff <- abs(res_df$aic1 - res_df$loodev1)
@@ -71,13 +74,13 @@ p_n <- annotate_figure(p_n, fig.lab = "\nA.", fig.lab.face = "bold", fig.lab.siz
 source("./sim_plot_phi.R")
 p_p <- p
 p_p <- annotate_figure(p_p, fig.lab = "\nB.", fig.lab.face = "bold", fig.lab.size = 12,
-                       top = text_grob("\n Clustering impact by predictors", size = 12, face = "bold", x=0,hjust=0),
+                       top = text_grob("\n Clustering impact in predictors", size = 12, face = "bold", x=0,hjust=0),
                        left = text_grob("Error", size = 10, face = "bold", rot = 90), 
                        bottom = text_grob("Generating Model Size", size = 10, face = "bold") )
 source("./sim_plot_sigma_ratio.R")
 p_r <- p
 p_r <- annotate_figure(p_r, fig.lab = "\nC.", fig.lab.face = "bold", fig.lab.size = 12,
-                       top = text_grob("\n Clustering impact by response", size = 12, face = "bold", x=0,hjust=0),
+                       top = text_grob("\n Clustering impact in response", size = 12, face = "bold", x=0,hjust=0),
                        left = text_grob("Error", size = 10, face = "bold", rot = 90), 
                        bottom = text_grob("Generating Model Size", size = 10, face = "bold") )
 

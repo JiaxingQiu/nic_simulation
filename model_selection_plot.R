@@ -65,10 +65,10 @@ for(sn in c("lm","lr") ){
 
   res_df_iter_long$score <- factor(res_df_iter_long$score, levels=c("loodev","nicc", "nic","aic","bic"))
   levels(res_df_iter_long$score) <- c("looDeviance\n(baseline)","NICc", "NIC", "AIC", "BIC")
-  x <- res_df_iter_long$value[which(res_df_iter_long$score=="looDeviance\n(baseline)" & res_df_iter_long$model_size==ifelse(cluster_size==150, 1, 25))]
-  ymax = mean(x) + 2*sd(x) / sqrt(length(x))
-  x <- res_df_iter_long$value[which(res_df_iter_long$score=="NIC" & res_df_iter_long$model_size==ifelse(cluster_size==150, 25, 10) )]
-  ymin = mean(x) - 2*sd(x) / sqrt(length(x))
+  # x <- res_df_iter_long$value[which(res_df_iter_long$score=="looDeviance\n(baseline)" & res_df_iter_long$model_size==ifelse(cluster_size==150, 1, 25))]
+  # ymax = mean(x) + 2*sd(x) / sqrt(length(x))
+  # x <- res_df_iter_long$value[which(res_df_iter_long$score=="NIC" & res_df_iter_long$model_size==ifelse(cluster_size==150, 25, 10) )]
+  # ymin = mean(x) - 2*sd(x) / sqrt(length(x))
   
   summa <- function(df){
     df[["se"]] <- sd(df[["value"]],na.rm=T)/sqrt(nrow(df))
@@ -78,6 +78,7 @@ for(sn in c("lm","lr") ){
   }
   gb <- group_by(res_df_iter_long, model_size, score)
   plot_df <- do(gb, summa(.) )
+  plot_df <- plot_df %>% filter(model_size<=24)
   p_agg[[sn]] <- ggplot(plot_df, aes(x = model_size, y = mean, color=score, fill=score)) +
     geom_line(linewidth = 1) +
     geom_ribbon(aes(ymin = mean - se, ymax=mean+se), alpha = 0.2, color=NA)+
@@ -91,7 +92,7 @@ for(sn in c("lm","lr") ){
     scale_color_manual(values = c("NICc" = "red", "AIC"="blue", "NIC" = "lightblue3", "BIC" = "orange", "looDeviance\n(baseline)" = "black")) +
     scale_fill_manual(values = c("NICc" = "red", "AIC"="blue", "NIC" = "lightblue3", "BIC" = "orange", "looDeviance\n(baseline)" = "darkgray")) +
     scale_y_continuous(
-      limits = c(ymin,ymax),
+      # limits = c(ymin,ymax),
       breaks = function(x) {
       seq(from = min(x), to = max(x), length.out = 5)
     },labels = function(y) sprintf("%.2f", y / 1000) ) +
@@ -127,15 +128,20 @@ for(sn in c("lm", "lr")){
     best_df$score <- factor(best_df$score, levels=c("loodev","nicc", "nic","aic","bic","dev"))
     levels(best_df$score) <- c("looDeviance\n(baseline)","NICc", "NIC", "AIC", "BIC", "Deviance")
     
-    ymax <- res_df_long$value[which(res_df_long$score=="looDeviance\n(baseline)" & res_df_long$model_size==1)] + 100
-    ymin <- res_df_long$value[which(res_df_long$score=="NIC" & res_df_long$model_size==25)] - 50
+    ymax <- res_df_long$value[which(res_df_long$score=="looDeviance\n(baseline)" & res_df_long$model_size==1)] + 300
+    ymin <- res_df_long$value[which(res_df_long$score=="NIC" & res_df_long$model_size==max(res_df_long$model_size))] - 50
+    
+    # res_df_long <- res_df_long %>% filter(model_size<=24)
+    # best_df$best_size[which(best_df$best_size>24)] <- 24
+    # best_df$best_size_1se_max[which(best_df$best_size_1se_max>24)] <- 24
+    # best_df$best_size_1se_min[which(best_df$best_size_1se_min>24)] <- 24
     
     pl[[i]] <- ggplot(res_df_long, aes(x = model_size, y = value, group = score, color = score)) +
       geom_line() +
       #geom_vline(xintercept = 5, color = "grey") +
       scale_color_manual(values = c("NICc" = "red", "AIC" = "blue","NIC" = "lightblue3", "BIC" = "orange", "looDeviance\n(baseline)" = "black", "Deviance" = "gray")) +
       theme_minimal() +
-      # scale_y_continuous(labels = scales::scientific_format()) +
+      xlim(0,24)+
       scale_y_continuous(
         limits = c(ymin,ymax),
         breaks = function(x) {
