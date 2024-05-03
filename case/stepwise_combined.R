@@ -58,28 +58,30 @@ if(!file.exists("./res/fwd_clustered_combined.RDS")){
   #                                free_cores = 1)
   # step-wise forward 
   res_df <- NULL
-  for(cr in c("AIC", "BIC", "NIC", "NICc", "looDeviance") ){
-    fwd <- modified_stepwise_glm_parallel(df = df_mdl,
-                                          y = y_col,
-                                          x = x_cols,
-                                          c = c_col,
-                                          maxstep = length(x_cols),
-                                          eval_ls = c(cr,"Deviance"),
-                                          eval_by = cr,
-                                          nfold = 50,
-                                          family = "binomial",
-                                          forward = T,
-                                          free_cores = 1)
+  for(cr in c("AIC", "BIC", "NIC", "NICc", "cvDeviance") ){
+    m1_sl <- modified_stepwise_glm_parallel(df = df_mdl,
+                                            y = y_col,
+                                            x = x_cols,
+                                            c = c_col, 
+                                            maxstep = length(x_cols),
+                                            eval_ls=c(cr,"Deviance"),
+                                            eval_by=cr,
+                                            nfold = 100,
+                                            family = "binomial",
+                                            forward = T,
+                                            free_cores = 2)
     
-    res_df_cr <- format_forward(fwd)
-    if(cr == "looDeviance"){
+    res_df_cr <- format_forward(m1_sl)
+    colnames(res_df_cr)[which(colnames(res_df_cr)=="x_picked")] <- paste0(cr,"_x_picked")
+    x_picked_cn <- paste0(cr,"_x_picked")
+    if(cr == "cvDeviance"){
       cr = c(gsub("iance","",cr),"dev")
     }
     cr <- stringr::str_to_lower(cr)
     if(is.null(res_df)) {
-      res_df <- res_df_cr[,c("model_size", "x_picked", cr)]
+      res_df <- res_df_cr[,c("model_size",x_picked_cn, cr)]
     }else{
-      res_df <- merge(res_df, res_df_cr[,c("model_size", "x_picked", cr)])
+      res_df <- merge(res_df, res_df_cr[,c("model_size",x_picked_cn,cr)])
     }
   }
   

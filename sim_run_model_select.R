@@ -1,7 +1,7 @@
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rm(list=ls())
 model_size = 5
-cluster_size = 5 # c(5, 150)
+cluster_size = 150 # c(5, 150)
 sigma_rdm_fix_ratio = 10 #c(0.5,1,5,10)
 source("./model_selection_step_loodev.R")# step-wise by loodev
 # source("./model_selection_lasso.R")# lasso 

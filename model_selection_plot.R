@@ -163,8 +163,8 @@ for(sn in c("lm", "lr")){
 
   # find 4 examples
   if(model_size==5 & cluster_size==150){
-    if(sn == "lm") ie <- c(1, 19, 60, 66) #, 38, 28
-    if(sn == "lr") ie <- c(33, 77, 82, 100) # 4, , 57
+    if(sn == "lm") ie <- c(1, 34, 42, 66) 
+    if(sn == "lr") ie <- c(16, 30, 56, 79)
   }
   if(model_size==5 & cluster_size==5){
     if(sn == "lm") ie <- c(2, 33, 80, 100) #50

@@ -1,7 +1,7 @@
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rm(list=ls())
 model_size = 5
-weak_cluster_size = 150 #5 
+weak_cluster_size = 5 #5 
 sigma_rdm_fix_ratio = 10 #c(0.5,1,5,10)
 library(tidyr)
 library(dplyr)
