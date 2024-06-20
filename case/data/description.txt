@@ -1,0 +1,21 @@
+Name	Description
+hr_mean	HR mean
+hr_std	HR standard deviation
+hr_max	HR maximum
+hr_min	HR minimum
+sp_mean	SPO2 mean
+sp_std	SPO2 standard deviation
+sp_max	SPO2 maximum
+sp_min	SPO2 minimum
+EGA	Estimated gestational age in weeks
+BWT	Birth weight in grams
+Male	Sex
+Apgar1	Apgar score at 1-minute
+Apgar5	Apgar score at 5-minute
+Vaginal	Vaginal delivery
+C-section	C-section delivery
+Steroids	Antenatal steroids
+InBorn	Born in hospital
+BirthHC	Head circumference 
+Multiple	Multiple births
+MaternalAge	Maternal age in years

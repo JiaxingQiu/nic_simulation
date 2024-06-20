@@ -35,28 +35,30 @@ for(cluster_size in c(weak_cluster_size,150)){
       best_df_iter[[sn]] <- bind_rows(best_df_iter[[sn]], best_df)
     }
   }
-  source("./model_selection_plot.R")
+  source("./model_selection_plot_woagg.R")
   source("./model_selection_stat.R")
   if(cluster_size == 150){
     
     library(grid) 
-    p_model_select <- annotate_figure(p_model_select, top = text_grob("Model Selection Process", size = 18, face = "bold", hjust = -0.15,x=0),
-                                      fig.lab = "B.", fig.lab.face = "bold", fig.lab.size = 20)
-    p_size <- annotate_figure(p_size, top = text_grob("Error in 100 iterations", size = 18, face = "bold", hjust = -0.15,x=0),#text_grob("Strong clustering condition", size = 18, face = "bold"),
-                              fig.lab = "A.", fig.lab.face = "bold", fig.lab.size = 20)
-    p_size <- annotate_figure(p_size, top = text_grob("Model Selection Accuracy (150 obs/cluster)", size = 20, face = "bold"))
+    p_model_select <- annotate_figure(p_model_select, top = text_grob("Iteration examples", size = 16, face = "bold", hjust = -0.15,x=0), #"Model Selection Process"
+                                      fig.lab = "B.", fig.lab.face = "bold", fig.lab.size = 18)
+    p_size <- annotate_figure(p_size, top = text_grob("Error in 100 iterations", size = 16, face = "bold", hjust = -0.15,x=0),#text_grob("Strong clustering condition", size = 18, face = "bold"),
+                              fig.lab = "A.", fig.lab.face = "bold", fig.lab.size = 18)
+    p_size <- annotate_figure(p_size, top = text_grob("Model Selection Accuracy\n", size = 18, face = "bold")) #  (150 obs/cluster)
   }else{
-    p_model_select <- annotate_figure(p_model_select, top = text_grob("Model Selection Process", size = 18, face = "bold", hjust = -0.15,x=0),
-                                      fig.lab = "B.", fig.lab.face = "bold", fig.lab.size = 20)
-    p_size <- annotate_figure(p_size, top = text_grob("Error in 100 iterations", size = 18, face = "bold", hjust = -0.15,x=0),
-                              fig.lab = "A.", fig.lab.face = "bold", fig.lab.size = 20)
-    p_size <- annotate_figure(p_size, top = text_grob("Model Selection Accuracy (5 obs/cluster)", size = 20, face = "bold"))
+    p_model_select <- annotate_figure(p_model_select, top = text_grob("Iteration examples", size = 16, face = "bold", hjust = -0.15,x=0),
+                                      fig.lab = "B.", fig.lab.face = "bold", fig.lab.size = 18)
+    p_size <- annotate_figure(p_size, top = text_grob("Error in 100 iterations", size = 16, face = "bold", hjust = -0.15,x=0),
+                              fig.lab = "A.", fig.lab.face = "bold", fig.lab.size = 18)
+    p_size <- annotate_figure(p_size, top = text_grob("Model Selection Accuracy (5 obs/cluster)\n", size = 18, face = "bold"))
   }
   
   f <- paste0("./res/",sigma_rdm_fix_ratio,"/model_select_example_",model_size,"_",cluster_size,en,".png")
-  p_model_select %>% ggsave(filename=f, width = 11, height = 10, bg="white")
+  # p_model_select %>% ggsave(filename=f, width = 11, height = 10, bg="white")
+  p_model_select %>% ggsave(filename=f, width = 10, height = 5.5, bg="white")
+  
   f <- paste0("./res/",sigma_rdm_fix_ratio,"/model_select_error_",model_size,"_",cluster_size,en,".png")
-  p_size %>% ggsave(filename=f, width = 11, height = 5, bg="white")
+  p_size %>% ggsave(filename=f, width = 10, height = 4.5, bg="white")
   
 } 
 

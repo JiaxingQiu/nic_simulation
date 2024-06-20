@@ -54,10 +54,10 @@ for(sn in c("lm","lr")){
     scale_fill_manual(values = c("NICc" = "red", "NIC" = "lightblue3", "AIC"="blue", "BIC" = "orange")) +
     theme_minimal() +
     labs(#subtitle = ifelse(sn=="lm", "Gaussian", "Binomial"), 
-         x = paste0("Accuracy at the Minimal"), y = "Count", fill = "Criteria")+
+         x = paste0("Accuracy of model selected by the minimal"), y = "Count", fill = "Criteria")+
     theme(text = element_text(face = "bold"),
           strip.text = element_text(size=12, face="bold"),
-          axis.title = element_text(size=12),
+          axis.title = element_text(size=10),
           axis.text = element_text(size=10),
           legend.title = element_text(size=12), 
           legend.text = element_text(size=10))  
@@ -65,15 +65,20 @@ for(sn in c("lm","lr")){
   model_misspec_long$score <- factor(model_misspec_long$score, levels=rev(c("NICc","NIC","AIC", "BIC")))
   pl_box[[sn]] <- ggplot(model_misspec_long, aes(x=value, group=score, fill=score))+
     geom_boxplot(aes(y=score)) + 
+    # geom_vline(aes(xintercept=1)) + 
     scale_fill_manual(values = c("NICc" = "red", "NIC" = "lightblue3", "AIC"="blue", "BIC" = "orange")) +
     theme_minimal() +
-    labs(x = paste0("Accuracy at the Minimal"), y = "Count", fill = "Criteria")+
+    xlim(0,1)+
+    labs(subtitle = "Variables selected at the minimal",
+         x = "Jaccard index",
+         y = NULL, 
+         fill = "Criteria") +
     theme(text = element_text(face = "bold"),
           strip.text = element_text(size=12, face="bold"),
-          axis.title = element_text(size=12),
+          axis.title = element_text(size=10),
           axis.text = element_text(size=10),
           legend.title = element_text(size=12), 
-          legend.text = element_text(size=10))  
+          legend.text = element_text(size=10))    
   
   
   # best model by 1se
@@ -91,7 +96,10 @@ for(sn in c("lm","lr")){
     facet_wrap(~score, nrow=1,ncol=4)+
     scale_fill_manual(values = c("NICc" = "red", "NIC" = "lightblue3", "AIC"="blue", "BIC" = "orange")) +
     theme_minimal() +
-    labs(x = paste0("Accuracy at 1SE"), y = "Count", fill = "Criteria") +
+    xlim(0,1)+
+    labs(x = paste0("Accuracy of model selected by 1SE"), 
+         y = "Count", 
+         fill = "Criteria") +
     theme(text = element_text(face = "bold"),
           strip.text = element_text(size=12, face="bold"),
           axis.title = element_text(size=12),
@@ -102,12 +110,16 @@ for(sn in c("lm","lr")){
   model_misspec_1se_long$score <- factor(model_misspec_1se_long$score, levels = rev(c("NICc","NIC","AIC", "BIC")) )
   pl_1se_box[[sn]] <- ggplot(model_misspec_1se_long, aes(x=value, group=score, fill=score))+
     geom_boxplot(aes(y=score)) + 
+    # geom_vline(aes(xintercept=1)) + 
     scale_fill_manual(values = c("NICc" = "red", "NIC" = "lightblue3", "AIC"="blue", "BIC" = "orange")) +
     theme_minimal() +
-    labs(x = paste0("Accuracy at 1SE"), y = "Count", fill = "Criteria") +
+    labs(subtitle = "Variables selected at 1SE",
+         x = "Jaccard index",
+         y = NULL, 
+         fill = "Criteria") +
     theme(text = element_text(face = "bold"),
           strip.text = element_text(size=12, face="bold"),
-          axis.title = element_text(size=12),
+          axis.title = element_text(size=10),
           axis.text = element_text(size=10),
           legend.title = element_text(size=12), 
           legend.text = element_text(size=10))  
@@ -117,15 +129,18 @@ for(sn in c("lm","lr")){
 
 
 p_lm <- ggarrange(pl[["lm"]],pl_1se[["lm"]],nrow=2,ncol=1, common.legend = T, legend = "none")
-p_lm <- annotate_figure(p_lm, top = text_grob("Gaussian", size = 14, face = "bold"))
+p_lm <- annotate_figure(p_lm, top = text_grob("Gaussian", size = 12, face = "bold"))
 p_lr <- ggarrange(pl[["lr"]],pl_1se[["lr"]],nrow=2,ncol=1, common.legend = T, legend = "none")
-p_lr <- annotate_figure(p_lr, top = text_grob("Binomial", size = 14, face = "bold"))
+p_lr <- annotate_figure(p_lr, top = text_grob("Binomial", size = 12, face = "bold"))
 p_spec <- ggarrange(p_lm, p_lr, nrow = 1, ncol = 2, common.legend = TRUE)
 
 
 
 p_lm <- ggarrange(pl_box[["lm"]],pl_1se_box[["lm"]],nrow=2,ncol=1, common.legend = T, legend = "none")
-p_lm <- annotate_figure(p_lm, top = text_grob("Gaussian", size = 14, face = "bold"))
+p_lm <- annotate_figure(p_lm, top = text_grob("Gaussian", size = 12, face = "bold"))
 p_lr <- ggarrange(pl_box[["lr"]],pl_1se_box[["lr"]],nrow=2,ncol=1, common.legend = T, legend = "none")
-p_lr <- annotate_figure(p_lr, top = text_grob("Binomial", size = 14, face = "bold"))
+p_lr <- annotate_figure(p_lr, top = text_grob("Binomial", size = 12, face = "bold"))
 p_spec_box <- ggarrange(p_lm, p_lr, nrow = 1, ncol = 2, common.legend = TRUE)
+# p_spec_box <- annotate_figure(p_spec_box,
+#                               bottom = text_grob("Jaccard index accuracy", size = 10, face = "bold"), 
+#                               left = text_grob("Criterion", size = 10, face = "bold", rot=90)  )

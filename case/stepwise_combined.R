@@ -2,6 +2,7 @@
 # merge data in one
 data <- merge(data_mdl, data_outc, all=TRUE)
 data <- merge(data, data_cv, all=TRUE)
+data <- merge(data, data_hruu, all=TRUE)
 data <- merge(data[,setdiff(colnames(data),"EGA")], data_demo, all=TRUE)
 # must be data.frame type object before use dictionary functions
 data <- as.data.frame(data)
@@ -17,7 +18,7 @@ rownames(dict_data) <- NULL
 c_col <- "VitalID"
 y_col <- "Event"
 x_cols <- setdiff(colnames(data_mdl),c_col)
-x_cols <- c(x_cols[9:16],setdiff(colnames(data_demo),c(c_col,"Fold")))
+x_cols <- c(x_cols[9:16],setdiff(colnames(data_demo),c(c_col,"Fold"))) #c(x_cols[9:16],"hr_increases")
 df_mdl <- distinct(as.data.frame(data[,c("Fold", c_col, y_col, x_cols)]))
 dict_mdl <- get.dict(df_mdl)
 dict_mdl$type[which(dict_mdl$varname==c_col)] <- "key"

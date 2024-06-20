@@ -1,59 +1,4 @@
 
-p_agg <- list()
-for(sn in c("lm","lr") ){
-  # Plot using stat_summary and stat_summary_ribbon
-  res_df_iter_long <- res_df_iter[[sn]] %>%
-    dplyr::select(model_size, nic, nicc, aic, bic, loodev, iter) %>%
-    pivot_longer(
-      cols = c(nic, nicc, aic, bic, loodev),  # Specify columns to lengthen
-      names_to = "score",  # New column for the names
-      values_to = "value"  # New column for the values
-    )
-
-  res_df_iter_long$score <- factor(res_df_iter_long$score, levels=c("loodev","nicc", "nic","aic","bic"))
-  levels(res_df_iter_long$score) <- c("looDeviance\n(baseline)","NICc", "NIC", "AIC", "BIC")
-  # x <- res_df_iter_long$value[which(res_df_iter_long$score=="looDeviance\n(baseline)" & res_df_iter_long$model_size==ifelse(cluster_size==150, 1, 25))]
-  # ymax = mean(x) + 2*sd(x) / sqrt(length(x))
-  # x <- res_df_iter_long$value[which(res_df_iter_long$score=="NIC" & res_df_iter_long$model_size==ifelse(cluster_size==150, 25, 10) )]
-  # ymin = mean(x) - 2*sd(x) / sqrt(length(x))
-  
-  summa <- function(df){
-    df[["se"]] <- sd(df[["value"]],na.rm=T)/sqrt(nrow(df))
-    df[["mean"]] <- mean(df[["value"]],na.rm=T)
-    df <- distinct(df[,c("score", "model_size", "mean", "se")])
-    return(df)
-  }
-  gb <- group_by(res_df_iter_long, model_size, score)
-  plot_df <- do(gb, summa(.) )
-  plot_df <- plot_df %>% filter(model_size<=24)
-  p_agg[[sn]] <- ggplot(plot_df, aes(x = model_size, y = mean, color=score, fill=score)) +
-    geom_line(linewidth = 1) +
-    geom_ribbon(aes(ymin = mean - se, ymax=mean+se), alpha = 0.2, color=NA)+
-    #geom_vline(xintercept = 5, color = "grey") +
-    labs(#title = ifelse(sn=="lm", "Gaussian", "Binomial"),
-      subtitle = "Mean +/- SE",
-      x = "Model size",
-      y = "Value (e+03)",
-      color="Criterion",
-      fill="Criterion") +
-    scale_color_manual(values = c("NICc" = "red", "AIC"="blue", "NIC" = "lightblue3", "BIC" = "orange", "looDeviance\n(baseline)" = "black")) +
-    scale_fill_manual(values = c("NICc" = "red", "AIC"="blue", "NIC" = "lightblue3", "BIC" = "orange", "looDeviance\n(baseline)" = "darkgray")) +
-    scale_y_continuous(
-      # limits = c(ymin,ymax),
-      breaks = function(x) {
-      seq(from = min(x), to = max(x), length.out = 5)
-    },labels = function(y) sprintf("%.2f", y / 1000) ) +
-    theme_minimal()+
-    theme(text = element_text(face = "bold"),
-          plot.subtitle = element_text(size=12, face="bold"),
-          axis.title = element_text(size=12),
-          axis.text = element_text(size=10),
-          legend.title = element_text(size=12),
-          legend.text = element_text(size=10))
-}
-
-
-
 
 pie <- list()
 for(sn in c("lm", "lr")){
@@ -96,7 +41,7 @@ for(sn in c("lm", "lr")){
       },labels = function(y) sprintf("%.2f", y / 1000) ) +
       geom_errorbar(data = best_df, aes(x = best_size, xmin=best_size_1se_min, xmax=best_size_1se_max, y = best_score, color=score))+
       geom_point(data = best_df, aes(x = best_size, y = best_score, color=score), size = 1.5)+
-      labs(title = paste0("iter = ",i), x = "Model Size", y = "Value", color = "Criterion") +
+      labs(title = paste0("iter = ",i), x = "Model size", y = "Value", color = "Criterion") +
       theme(text = element_text(face = "bold"),
             plot.subtitle = element_text(size=12, face="bold"),
             axis.title = element_text(size=12),
@@ -132,15 +77,15 @@ for(sn in c("lm", "lr")){
   pie[[sn]] <- ggarrange(plotlist = pl_ie, nrow=2, ncol=2, common.legend = T, legend = "none") # ifelse(sn=="lm", "none", "bottom")
   # ggarrange(plotlist = pl_ie, nrow=2, ncol=5, common.legend = T, legend = "none") # ifelse(sn=="lm", "none", "bottom")
   
-  pie[[sn]] <- annotate_figure(pie[[sn]], top=text_grob("Iteration examples", size = 12, face = "bold", hjust = -0.35, x = 0), 
+  pie[[sn]] <- annotate_figure(pie[[sn]], #top=text_grob("Iteration examples", size = 12, face = "bold", hjust = -0.35, x = 0), 
                          left = text_grob("Value (e+03)", size = 12, face = "bold", rot = 90), 
-                         bottom = text_grob("Model Size", size = 12, face = "bold"))
+                         bottom = text_grob("Model size", size = 12, face = "bold"))
 }
 
 # title_text <- "Model selection trajectory"
-p_lm <- ggarrange(p_agg[["lm"]],pie[["lm"]],nrow=2,ncol=1, common.legend = T, legend = "none")
+p_lm <- ggarrange(pie[["lm"]],nrow=1,ncol=1, common.legend = T, legend = "none")
 p_lm <- annotate_figure(p_lm, top = text_grob("Gaussian", size = 14, face = "bold"))
-p_lr <- ggarrange(p_agg[["lr"]],pie[["lr"]],nrow=2,ncol=1, common.legend = T, legend = "none")
+p_lr <- ggarrange(pie[["lr"]],nrow=1,ncol=1, common.legend = T, legend = "none")
 p_lr <- annotate_figure(p_lr, top = text_grob("Binomial", size = 14, face = "bold"))
 p_model_select <- ggarrange(p_lm, p_lr, nrow = 1, ncol = 2, common.legend = TRUE, legend.grob = get_legend(pl_ie[[1]]), legend = "bottom")
 

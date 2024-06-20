@@ -31,14 +31,14 @@ for(sn in c("lm","lr")){
   diff_model_size_long$score <- factor(diff_model_size_long$score, levels = c("nicc","nic","aic","bic"))
   levels(diff_model_size_long$score) <- c("NICc","NIC","AIC", "BIC")
   pl[[sn]] <- ggplot(diff_model_size_long, aes(x=value, group=score, fill=score))+
-    geom_histogram(binwidth=1) +
+    geom_histogram(binwidth=2) +
     geom_vline(aes(xintercept = 0),color="black")+
     facet_wrap(~score, nrow=1,ncol=4)+
     scale_fill_manual(values = c("NICc" = "red", "NIC" = "lightblue3", "AIC"="blue", "BIC" = "orange")) +
     theme_minimal() +
     xlim(-5,20)+
     labs(#subtitle = ifelse(sn=="lm", "Gaussian", "Binomial"), 
-         x = paste0("Error in model size selected by the Minimal"), y = "Count", fill = "Criteria")+
+         x = paste0("Error in model size selected by the minimal"), y = "Count", fill = "Criteria")+
     theme(text = element_text(face = "bold"),
           strip.text = element_text(size=12, face="bold"),
           axis.title = element_text(size=12),
@@ -55,7 +55,7 @@ for(sn in c("lm","lr")){
   diff_model_size_long$score <- factor(diff_model_size_long$score, levels = c("nicc","nic","aic","bic"))
   levels(diff_model_size_long$score) <- c("NICc","NIC","AIC", "BIC")
   pl_1se[[sn]] <- ggplot(diff_model_size_long, aes(x=value, group=score, fill=score))+
-    geom_histogram(binwidth=1) +
+    geom_histogram(binwidth=2) +
     geom_vline(aes(xintercept = 0),color="black")+
     facet_wrap(~score, nrow=1,ncol=4)+
     scale_fill_manual(values = c("NICc" = "red", "NIC" = "lightblue3", "AIC"="blue", "BIC" = "orange")) +

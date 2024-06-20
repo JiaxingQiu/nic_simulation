@@ -2,8 +2,8 @@ plot_ls <- list()
 for(rn in c("lm","lr")){
   agg_df <- agg_df_ls[[rn]]
   agg_df <- agg_df %>% filter(na_rate == 0, 
-                              ar1_phi == 0.8,
-                              n_obs_per_cluster == 150) %>% 
+                              ar1_phi == 0.4,
+                              n_obs_per_cluster == 50) %>% 
     as.data.frame()
   plot_df <- NULL
   for(en in c("_median","_q25", "_q75")){
@@ -28,10 +28,10 @@ for(rn in c("lm","lr")){
                                                                           "100 obs/cluster",
                                                                           "150 obs/cluster") )
   plot_df$ic_type <- stringr::str_to_upper(gsub("_diff","",plot_df$ic_type))
-  plot_df$ic_type <- factor(plot_df$ic_type, levels=c("NICC","AIC", "NIC","BIC"))
-  levels(plot_df$ic_type) <- c("NICc","AIC","NIC","BIC")
-  plot_df$sigma_rdm_fix_ratio <- factor(plot_df$sigma_rdm_fix_ratio, levels=c(0.5, 1, 5, 10))
-  levels(plot_df$sigma_rdm_fix_ratio) <- paste0("ratio=", c(0.5, 1, 5, 10))
+  plot_df$ic_type <- factor(plot_df$ic_type, levels=c("NICC", "NIC","AIC","BIC"))
+  levels(plot_df$ic_type) <- c("NICc","NIC","AIC","BIC")
+  plot_df$sigma_rdm_fix_ratio <- factor(plot_df$sigma_rdm_fix_ratio, levels=sort(unique(plot_df$sigma_rdm_fix_ratio)) )
+  levels(plot_df$sigma_rdm_fix_ratio) <- c("low", "median","high")#paste0("strength=", levels(plot_df$sigma_rdm_fix_ratio))
   
   plot_ls[[rn]] <- ggplot(data = plot_df, aes(x = n_ttl_betas, y = ic_diff, color = ic_type)) + 
     geom_point(size=1.5) +

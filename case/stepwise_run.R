@@ -25,6 +25,8 @@ data <- read_excel("./data/PAS Challenge Cross-Validation Folds.xlsx")
 data_cv <- assign.dict(data, get.dict(data))
 data <- read_excel("./data/PAS Challenge Outcome Data.xlsx")
 data_outc <- assign.dict(data, get.dict(data))
+data <- read.csv("./data/train_hr_uu.csv")[,c("VitalID", "VitalTime", "hr_increases")]
+data_hruu <- assign.dict(data, get.dict(data))
 
 source("./stepwise_combined.R")
 source("./stepwise_demo.R")

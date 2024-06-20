@@ -37,11 +37,11 @@ for(cluster_size in c(weak_cluster_size,150)){
   }
   source("./model_selection_spec.R")
   if(cluster_size == 150){
-    p_spec <- annotate_figure(p_spec, top = text_grob("Accuracy of Variable Specification (150 obs/cluster)", size = 16, face = "bold") )
-    p_spec_box <- annotate_figure(p_spec_box, top = text_grob("Accuracy of Variable Specification (150 obs/cluster)", size = 16, face = "bold") )
+    p_spec <- annotate_figure(p_spec, top = text_grob("Model Specification Accuracy (150 obs/cluster)\n", size = 14, face = "bold") )
+    p_spec_box <- annotate_figure(p_spec_box, top = text_grob("Model Specification Accuracy\n", size = 14, face = "bold") ) # (150 obs/cluster)
   }else{
-    p_spec <- annotate_figure(p_spec, top = text_grob("Accuracy of Variable Specification (5 obs/cluster)", size = 16, face = "bold") )
-    p_spec_box <- annotate_figure(p_spec_box, top = text_grob("Accuracy of Variable Specification (5 obs/cluster)", size = 16, face = "bold") )
+    p_spec <- annotate_figure(p_spec, top = text_grob("Model Specification Accuracy (5 obs/cluster)\n", size = 14, face = "bold") )
+    p_spec_box <- annotate_figure(p_spec_box, top = text_grob("Model Specification Accuracy (5 obs/cluster)\n", size = 14, face = "bold") )
   }
   
   f <- paste0("./res/",sigma_rdm_fix_ratio,"/model_misspecification_",model_size,"_",cluster_size,en,".png")
