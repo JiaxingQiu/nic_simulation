@@ -32,7 +32,7 @@
 
 # Parameters
 n_cluster <- c(10, 50) #c(50) # number of clusters
-n_obs_per_cluster <- rev(c(5, 10, 50, 75, 100, 150)) #rev(c(5, 10, 50, 100, 150))  number of observations per cluster
+n_obs_per_cluster <- rev(c(5, 10, 25, 50, 100, 150)) #rev(c(5, 10, 50, 100, 150))  number of observations per cluster
 n_ttl_betas <- seq(5, 10) # number of total effects
 fix_rdm_ratio <- c(0.2) # c(0.2, 0.5, 0.8) # proportion of fix effects
 sigma_fix <- c(5) # fix effect beta variance # 5

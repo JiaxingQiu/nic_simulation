@@ -25,7 +25,7 @@ for(rn in c("lm","lr")){
                                   agg_df$sigma_rdm_fix_ratio==0.5 &
                                   agg_df$ar1_phi==0)] <- "low"
   
-  agg_df$cluster_strength[which(agg_df$n_obs_per_cluster==10 &
+  agg_df$cluster_strength[which(agg_df$n_obs_per_cluster==25 &
                                   agg_df$sigma_rdm_fix_ratio==1 &
                                   agg_df$ar1_phi==0.8 )] <- "median"
   

@@ -16,7 +16,8 @@ for(rn in c("lr", "lm")){
   if(rn == "lm") output <- readRDS(paste0("./res/", lm_output_fname))
   source("./sim_conditions.R")
   res_df <- merge(output, simulation_conditions, by="id", all.x=T)
-  res_df <- res_df %>% filter(!sigma_rdm_fix_ratio==5) %>%as.data.frame()
+  res_df <- res_df %>% filter(!sigma_rdm_fix_ratio==5,
+                              n_cluster == 50) %>%as.data.frame()
   if(!"nicc1" %in%colnames(res_df) ){
     res_df$nicc1 <- res_df$nic1 # comment out remember
     print("error : nic used for nicc ")

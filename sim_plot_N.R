@@ -1,7 +1,8 @@
 plot_ls <- list()
 for(rn in c("lm","lr")){
   agg_df <- agg_df_ls[[rn]]
-  agg_df <- agg_df %>% filter(na_rate == 0, 
+  agg_df <- agg_df %>% filter(na_rate == 0,
+                              !n_obs_per_cluster == 75, 
                               sigma_rdm_fix_ratio == 1,
                               ar1_phi == 0.4) %>% 
     as.data.frame()
