@@ -2,7 +2,8 @@ plot_ls <- list()
 for(rn in c("lm","lr")){
   agg_df <- agg_df_ls[[rn]]
   agg_df <- agg_df %>% filter(na_rate == 0,
-                              !n_obs_per_cluster == 75, 
+                              n_cluster == 50,
+                              !n_obs_per_cluster == 5, 
                               sigma_rdm_fix_ratio == 1,
                               n_obs_per_cluster == 50) %>% 
     as.data.frame()
@@ -22,12 +23,6 @@ for(rn in c("lm","lr")){
   plot_df$ic_diff_l <- plot_df$ic_diff_q25
   plot_df$ic_diff_u <- plot_df$ic_diff_q75
   plot_df <- merge(plot_df,simulation_conditions, by="id", all.x=T) %>% as.data.frame()
-  plot_df$n_obs_per_cluster <- paste0(plot_df$n_obs_per_cluster, " obs/cluster")
-  plot_df$n_obs_per_cluster <- factor(plot_df$n_obs_per_cluster, levels=c("5 obs/cluster",
-                                                                          "10 obs/cluster",
-                                                                          "50 obs/cluster",
-                                                                          "100 obs/cluster",
-                                                                          "150 obs/cluster") )
   plot_df$ic_type <- stringr::str_to_upper(gsub("_diff","",plot_df$ic_type))
   plot_df$ic_type <- factor(plot_df$ic_type, levels=c("NICC","NIC","AIC","BIC"))
   levels(plot_df$ic_type) <- c("NICc","NIC","AIC","BIC")
@@ -49,7 +44,7 @@ for(rn in c("lm","lr")){
     scale_color_manual(values = c("NICc" = "red", "NIC" = "lightblue3", "AIC" = "blue", "BIC" = "darkorange", "looDeviance" = "black", "Deviance" = "gray")) +
     theme(text = element_text(face = "bold"),
           plot.subtitle = element_text(size=10, face="bold"),
-          axis.text = element_text(size=8))
+          axis.text = element_text(size=8)) 
 }
 
 p <- ggarrange(plotlist = plot_ls, nrow=2,ncol=1, common.legend = T,legend = "none")

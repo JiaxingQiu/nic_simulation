@@ -36,9 +36,9 @@ for(sn in c("lm","lr")){
     facet_wrap(~score, nrow=1,ncol=4)+
     scale_fill_manual(values = c("NICc" = "red", "NIC" = "lightblue3", "AIC"="blue", "BIC" = "orange")) +
     theme_minimal() +
-    xlim(-5,20)+
+    xlim(ifelse(cs=="strong",-5,-10),ifelse(cs=="strong",20,10))+
     labs(#subtitle = ifelse(sn=="lm", "Gaussian", "Binomial"), 
-         x = paste0("Error in model size selected by the minimal"), y = "Count", fill = "Criteria")+
+         x = paste0("Error in selected size by minimal"), y = "Count", fill = "Criteria")+
     theme(text = element_text(face = "bold"),
           strip.text = element_text(size=12, face="bold"),
           axis.title = element_text(size=12),
@@ -60,9 +60,9 @@ for(sn in c("lm","lr")){
     facet_wrap(~score, nrow=1,ncol=4)+
     scale_fill_manual(values = c("NICc" = "red", "NIC" = "lightblue3", "AIC"="blue", "BIC" = "orange")) +
     theme_minimal() +
-    xlim(-5,20)+
+    xlim(ifelse(cs=="strong",-5,-10),ifelse(cs=="strong",20,10))+
     labs(#subtitle = ifelse(sn=="lm", "Gaussian", "Binomial"),
-         x = paste0("Error in model size selected by 1SE"), y = "Count", fill = "Criteria") +
+         x = paste0("Error in selected size by 1SE"), y = "Count", fill = "Criteria") +
     theme(text = element_text(face = "bold"),
           strip.text = element_text(size=12, face="bold"),
           axis.title = element_text(size=12),

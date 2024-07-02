@@ -1,23 +1,43 @@
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 rm(list=ls())
 model_size = 5
-weak_cluster_size = 5 #5 
-sigma_rdm_fix_ratio = 10 #c(0.5,1,5,10)
+cluster_strength <- c("weak", "moderate", "strong","moderate_strong")#
+
 library(tidyr)
 library(dplyr)
 library(ggplot2)
 library(ggpubr)
 library(magick)
 
-
-for(cluster_size in c(weak_cluster_size,150)){
+p_size_ls <- list()
+for(cs in cluster_strength){
+  if(cs =="weak"){
+    cluster_size = 10
+    sigma_rdm_fix_ratio = 0.5
+    ar1_phi = 0
+  }
+  if(cs =="moderate"){
+    cluster_size = 50
+    sigma_rdm_fix_ratio = 5
+    ar1_phi = 0.4
+  }
+  if(cs == "strong"){
+    cluster_size = 150
+    sigma_rdm_fix_ratio = 10
+    ar1_phi = 0.8
+  }
+  if(cs == "moderate_strong"){
+    cluster_size = 100
+    sigma_rdm_fix_ratio = 10
+    ar1_phi = 0.4
+  }
   source("./model_selection_step_loodev.R")# step-wise by loodev
   en <- "" #"_random" #
   sim_condition = simulation_conditions[which(simulation_conditions$id==1),]
   res_df_iter <- list()
   best_df_iter <- list()
   for(sn in c("lm","lr")){
-    res_df_iter[[sn]] <- readRDS(paste0("./res/",sigma_rdm_fix_ratio,"/model_select_",sn,"_",unique(sim_condition$n_ttl_betas),"_",unique(sim_condition$n_obs_per_cluster),en,".RDS"))
+    res_df_iter[[sn]] <- readRDS(paste0("./res/",sim_condition$sigma_rdm_fix_ratio,"/model_select_",sn,"_",unique(sim_condition$n_ttl_betas),"_",unique(sim_condition$n_obs_per_cluster),en,".RDS"))
     best_df_iter[[sn]] <- data.frame()
     for(i in sort(unique(res_df_iter[[sn]]$iter))){
       res_df <- res_df_iter[[sn]] %>% filter(iter==i) %>% as.data.frame()
@@ -37,55 +57,29 @@ for(cluster_size in c(weak_cluster_size,150)){
   }
   source("./model_selection_plot_woagg.R")
   source("./model_selection_stat.R")
-  if(cluster_size == 150){
-    
-    library(grid) 
-    p_model_select <- annotate_figure(p_model_select, top = text_grob("Iteration examples", size = 16, face = "bold", hjust = -0.15,x=0), #"Model Selection Process"
-                                      fig.lab = "B.", fig.lab.face = "bold", fig.lab.size = 18)
-    p_size <- annotate_figure(p_size, top = text_grob("Error in 100 iterations", size = 16, face = "bold", hjust = -0.15,x=0),#text_grob("Strong clustering condition", size = 18, face = "bold"),
-                              fig.lab = "A.", fig.lab.face = "bold", fig.lab.size = 18)
-    p_size <- annotate_figure(p_size, top = text_grob("Model Selection Accuracy\n", size = 18, face = "bold")) #  (150 obs/cluster)
-  }else{
-    p_model_select <- annotate_figure(p_model_select, top = text_grob("Iteration examples", size = 16, face = "bold", hjust = -0.15,x=0),
-                                      fig.lab = "B.", fig.lab.face = "bold", fig.lab.size = 18)
-    p_size <- annotate_figure(p_size, top = text_grob("Error in 100 iterations", size = 16, face = "bold", hjust = -0.15,x=0),
-                              fig.lab = "A.", fig.lab.face = "bold", fig.lab.size = 18)
-    p_size <- annotate_figure(p_size, top = text_grob("Model Selection Accuracy (5 obs/cluster)\n", size = 18, face = "bold"))
+  if(cs %in% c("moderate", "weak", "moderate_strong") ){
+    p_size_ls[[cs]] <- annotate_figure(p_size, top = text_grob(paste0("\nModel size selection accuracy\n"), size = 14, hjust = -0.15,x=0))
   }
   
-  f <- paste0("./res/",sigma_rdm_fix_ratio,"/model_select_example_",model_size,"_",cluster_size,en,".png")
-  # p_model_select %>% ggsave(filename=f, width = 11, height = 10, bg="white")
+  library(grid) 
+  p_model_select <- annotate_figure(p_model_select, top = text_grob("Iteration examples", size = 16, face = "bold", hjust = -0.15,x=0), #"Model Selection Process"
+                                    fig.lab = "B.", fig.lab.face = "bold", fig.lab.size = 18)
+  
+  p_size <- annotate_figure(p_size, top = text_grob("Error in 100 iterations", size = 16, face = "bold", hjust = -0.15,x=0),#text_grob("Strong clustering condition", size = 18, face = "bold"),
+                            fig.lab = "A.", fig.lab.face = "bold", fig.lab.size = 18)
+  p_size <- annotate_figure(p_size, top = text_grob(paste0("Model Size Selection Accuracy (",cs," clustering)\n"), size = 18, face = "bold")) #  (150 obs/cluster)
+  
+  f <- paste0("./res/",sim_condition$sigma_rdm_fix_ratio,"/model_select_example_",model_size,"_",cluster_size,en,".png")
   p_model_select %>% ggsave(filename=f, width = 10, height = 5.5, bg="white")
   
-  f <- paste0("./res/",sigma_rdm_fix_ratio,"/model_select_error_",model_size,"_",cluster_size,en,".png")
+  f <- paste0("./res/",sim_condition$sigma_rdm_fix_ratio,"/model_select_error_",model_size,"_",cluster_size,en,".png")
   p_size %>% ggsave(filename=f, width = 10, height = 4.5, bg="white")
   
+  
+  img1 <- image_read(paste0("./res/",sim_condition$sigma_rdm_fix_ratio,"/model_select_error_",model_size,"_",cluster_size,en,".png"))
+  img2 <- image_read(paste0("./res/",sim_condition$sigma_rdm_fix_ratio,"/model_select_example_",model_size,"_",cluster_size,en,".png"))
+  combined_image <- image_append(c(img1, img2), stack = T)
+  image_write(combined_image, paste0("./res/",sim_condition$sigma_rdm_fix_ratio,"/model_select_",cs,".png"))
+  
 } 
-
-
-img1 <- image_read(paste0("./res/",sigma_rdm_fix_ratio,"/model_select_example_",model_size,"_150",en,".png"))
-img1 <- image_border(img1, "black", "10x10")
-img2 <- image_read(paste0("./res/",sigma_rdm_fix_ratio,"/model_select_example_",model_size,"_", weak_cluster_size, en,".png"))
-img2 <- image_border(img2, "black", "10x10")
-combined_lower <- image_append(c(img1, img2), stack = FALSE)
-img1 <- image_read(paste0("./res/",sigma_rdm_fix_ratio,"/model_select_error_",model_size,"_150",en,".png"))
-img1 <- image_border(img1, "black", "10x10")
-img2 <- image_read(paste0("./res/",sigma_rdm_fix_ratio,"/model_select_error_",model_size,"_",weak_cluster_size,en,".png"))
-img2 <- image_border(img2, "black", "10x10")
-combined_upper <- image_append(c(img1, img2), stack = FALSE)
-combined_image <- image_append(c(combined_upper, combined_lower), stack = T)
-image_write(combined_image, paste0("./res/",sigma_rdm_fix_ratio,"/model_select_full.png"))
-
-
-# split vertically 
-img1 <- image_read(paste0("./res/",sigma_rdm_fix_ratio,"/model_select_error_",model_size,"_150",en,".png"))
-img2 <- image_read(paste0("./res/",sigma_rdm_fix_ratio,"/model_select_example_",model_size,"_150",en,".png"))
-combined_image <- image_append(c(img1, img2), stack = T)
-image_write(combined_image, paste0("./res/",sigma_rdm_fix_ratio,"/model_select_strong.png"))
-
-img1 <- image_read(paste0("./res/",sigma_rdm_fix_ratio,"/model_select_error_",model_size,"_",weak_cluster_size,en,".png"))
-img2 <- image_read(paste0("./res/",sigma_rdm_fix_ratio,"/model_select_example_",model_size,"_",weak_cluster_size,en,".png"))
-combined_image <- image_append(c(img1, img2), stack = T)
-image_write(combined_image, paste0("./res/",sigma_rdm_fix_ratio,"/model_select_weak.png"))
-
 

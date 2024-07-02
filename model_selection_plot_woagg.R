@@ -60,18 +60,18 @@ for(sn in c("lm", "lr")){
   # ggarrange(plotlist = pl[81:100],nrow=4, ncol=5,common.legend = T, legend = "right")
 
   # find 4 examples
-  if(model_size==5 & cluster_size==150){
+  if(cs=="strong"){
     if(sn == "lm") ie <- c(1, 34, 42, 66) 
     if(sn == "lr") ie <- c(16, 30, 56, 79)
-  }
-  if(model_size==5 & cluster_size==5){
-    if(sn == "lm") ie <- c(2, 33, 80, 100) #50
+  }else if(cs=="moderate_strong"){
+    if(sn == "lm") ie <- c(2, 33, 80, 100)
+    if(sn == "lr") ie <- c(3, 31, 59, 100) 
+  }else{
+    if(sn == "lm") ie <- c(2, 33, 80, 100)
     if(sn == "lr") ie <- c(3, 31, 59, 100) 
   }
-  if(model_size==10){
-    if(sn == "lm") ie <- c(76, 54, 26, 32) #, 20
-    if(sn == "lr") ie <- c(16, 33, 46, 51) #27
-  }
+  
+  
   
   pl_ie <- lapply(pl[ie], function(p) return(p+labs(title=NULL, x=NULL, y=NULL) + theme(legend.position = "top")))
   pie[[sn]] <- ggarrange(plotlist = pl_ie, nrow=2, ncol=2, common.legend = T, legend = "none") # ifelse(sn=="lm", "none", "bottom")
