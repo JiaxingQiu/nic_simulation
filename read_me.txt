@@ -20,6 +20,6 @@ sim_run_lm_pair.R
 
 # simulate rare event observation situations
 sim_run_rare.R
-
+sim_output_rare.R
 
 

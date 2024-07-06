@@ -132,6 +132,7 @@ p_sm <- annotate_figure(p, fig.lab = "\nB.", fig.lab.face = "bold", fig.lab.size
                         left = text_grob("Error", size = 8, face = "bold", rot = 90), 
                         bottom = text_grob("Generating model size", size = 8, face = "bold") )
 
+
 p_spec <- ggarrange(p_na, p_sm, ncol=2, nrow=1, widths = c(2.5,3) )
 p_spec <- annotate_figure(p_spec, top = text_grob("Approximating looDeviance (special scenarios)", size = 14, face = "bold"))
 
