@@ -29,7 +29,7 @@ for(rn in c("lm","lr")){
   plot_df$ar1_phi <- factor(plot_df$ar1_phi, levels=c(0, 0.4, 0.8))
   levels(plot_df$ar1_phi) <- c("low", "median","high")# c("AR1(0)","AR1(0.4)","AR1(0.8)")
   plot_ls[[rn]] <- ggplot(data = plot_df, aes(x = n_ttl_betas, y = ic_diff, color = ic_type)) + 
-    geom_point(size=0.7) +
+    geom_point(size=0.9) +
     geom_line(linewidth=0.3) + 
     geom_errorbar(aes(ymin = ic_diff_l, ymax = ic_diff_u),width=0.2) + 
     geom_hline(aes(yintercept=0)) + 

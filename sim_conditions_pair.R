@@ -21,6 +21,6 @@ param_grid <- expand.grid(n_cluster = n_cluster,
                           na_rate = na_rate)
 simulation_conditions <- as.data.frame(param_grid)
 simulation_conditions$id <- seq(1:nrow(param_grid))
-simulation_conditions$iter <- 100
+simulation_conditions$iter <- 1000
 
 

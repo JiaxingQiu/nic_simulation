@@ -12,3 +12,8 @@ sim_model_select_output.R
 sim_run_k_fold.R
 sim_run_lm_k_fold.R
 sim_output_k_fold.R
+
+# simulate paired observation situations
+sim_run_pair.R
+sim_run_lm_pair.R
+

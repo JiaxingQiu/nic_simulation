@@ -30,7 +30,7 @@ for(rn in c("lm","lr")){
   levels(plot_df$sigma_rdm_fix_ratio) <- c("low", "median","high")#paste0("strength=", levels(plot_df$sigma_rdm_fix_ratio))
   
   plot_ls[[rn]] <- ggplot(data = plot_df, aes(x = n_ttl_betas, y = ic_diff, color = ic_type)) + 
-    geom_point(size=0.7) +
+    geom_point(size=0.9) +
     geom_line(linewidth=0.3) + 
     geom_errorbar(aes(ymin = ic_diff_l, ymax = ic_diff_u),width=0.2) + 
     geom_hline(aes(yintercept=0)) + 
