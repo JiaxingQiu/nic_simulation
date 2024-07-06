@@ -32,7 +32,7 @@ source("./sim_conditions_rare.R")
 
 #This function runs each condition (i.e. each row in the simulation condition data.frame)
 # for test: 
-sim_condition = simulation_conditions[which(simulation_conditions$id==12),]
+sim_condition = simulation_conditions[which(simulation_conditions$id=="rare_18"),]
 
 
 run_wrapper <- function(sim_condition) {
@@ -110,7 +110,7 @@ sjob = slurm_map(
   submit = TRUE,
   preschedule_cores = F,
   slurm_options =
-    c(account = "netlab", partition = "standard", time = "1-00:00:00"), # standard
+    c(account = "netlab", partition = "standard", time = "2-00:00:00"), # standard
   global_objects = lsf.str()
 )
 save(sjob, file = "nic_simulation_run_lr_rare.Rdata")
