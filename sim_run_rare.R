@@ -84,8 +84,6 @@ run_wrapper <- function(sim_condition) {
       results_list[[i]] = list(id = sim_condition$id, 
                                iter = i, 
                                N = nrow(res$data),
-                               bias1 = bias$bias1,
-                               se_ratio1 = se_ratio$se_ratio1,
                                aic1 = m1$aic,
                                bic1 = m1$bic,
                                nic1 = m1$nic,
