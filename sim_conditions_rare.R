@@ -60,9 +60,12 @@ simulation_conditions3$clustering_strength <- "strong"
 
 
 simulation_conditions <- rbind(simulation_conditions1, simulation_conditions2, simulation_conditions3)
-rm(simulation_conditions1, simulation_conditions2, simulation_conditions3)
 simulation_conditions$case <- "rare"
-simulation_conditions$id <- paste0("rare_",seq(1:nrow(simulation_conditions)))
+simulation_conditions0 <- simulation_conditions
+simulation_conditions0$case <- "raw"
+simulation_conditions <- rbind(simulation_conditions0, simulation_conditions)
+rm(simulation_conditions0, simulation_conditions1, simulation_conditions2, simulation_conditions3)
+simulation_conditions$id <- seq(1:nrow(simulation_conditions))
 simulation_conditions$iter <- 100
 
 
