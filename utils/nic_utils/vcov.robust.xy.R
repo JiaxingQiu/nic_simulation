@@ -39,7 +39,7 @@ vcov.robust.xy <- function(x,y,b,c){
   # calculate the gradient g [1*p]
   g <- t(y-p) %*% x
   
-  # calculate information matrix J [p*p]
+  # calculate hessian matrix J [p*p]
   J <- t(x * as.numeric(p*(1-p))) %*% x
   # J <- t(x) %*% diag(as.numeric(p*(1-p))) %*% x # very slow
   

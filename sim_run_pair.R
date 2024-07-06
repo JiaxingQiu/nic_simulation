@@ -26,10 +26,16 @@ for(u in c("nic", "ass", "stp", "do")){
   flst = list.files( path)
   sapply(c(paste(path,flst,sep="/")), source, .GlobalEnv)
 }
-source("./sim_conditions_k_fold.R")
+source("./sim_conditions_pair.R")
 
 
-run_wrapper_lm <- function(sim_condition) {
+
+#This function runs each condition (i.e. each row in the simulation condition data.frame)
+# for test: 
+# sim_condition = simulation_conditions[which(simulation_conditions$id==56),]
+# saveRDS(res, "./doug_lr_sim_data.RDS")
+
+run_wrapper <- function(sim_condition) {
   results_list = list()
   for(i in 1:sim_condition$iter){
     tryCatch({
@@ -40,34 +46,42 @@ run_wrapper_lm <- function(sim_condition) {
                            sim_condition$sigma_fix,
                            sim_condition$sigma_rdm_fix_ratio,
                            sim_condition$ar1_phi,
-                           sim_condition$na_rate,
-                           family = "gaussian")
-      # maintain the loo 
+                           sim_condition$na_rate)
+      # ground truth mixed effect model
+      m0 <- fit_eval_glmer(y = res$y,
+                           c = res$c,
+                           data = res$data)
+      # lr model evaluation matrices
       m1 <- fit_eval_glm(y = res$y,
                          c = res$c,
-                         data = res$data,
-                         family = "gaussian")
+                         data = res$data)
       stopifnot(!is.na(m1$aic))
+      
+      # measure bias
+      bias <- calculate_bias(res, m0, m1)
+      
+      # measure se estimate 
+      se_ratio <- calculate_se_accuracy(res, m0, m1)
+      
       results_list[[i]] = list(id = sim_condition$id, 
                                iter = i, 
                                N = nrow(res$data),
+                               bias0 = bias$bias0,
+                               bias1 = bias$bias1,
+                               se_ratio0 = se_ratio$se_ratio0,
+                               se_ratio1 = se_ratio$se_ratio1,
+                               aic0 = m0$aic,
                                aic1 = m1$aic,
+                               bic0 = m0$bic,
                                bic1 = m1$bic,
                                nic1 = m1$nic,
                                nicc1 = m1$nicc,
+                               dev0 = m0$deviance,
                                dev1 = m1$deviance,
+                               loopred0 = m0$loopred,
                                loopred1 = m1$loopred,
+                               loodev0 = m0$looDeviance,
                                loodev1 = m1$looDeviance)
-      # assign unique(res$c) into k folds
-      for(k in c(5, 10, 50, 80)) {
-        folds <- cut(seq_along(unique(res$c)), breaks=k, labels=FALSE)
-        res$fold <- folds[match(res$c, unique(res$c))]
-        m2 <- fit_eval_glm(y = res$y,
-                           c = res$fold,
-                           data = res$data,
-                           family = "gaussian")
-        results_list[[i]][[paste0("k_", k)]] <- m2$looDeviance
-      }
       
     }, error = function(e){
       print(e)
@@ -79,26 +93,16 @@ run_wrapper_lm <- function(sim_condition) {
   return(toReturn)
 }
 
-# 
-# sjob = slurm_map(
-#   split(simulation_conditions, simulation_conditions$id),
-#   run_wrapper_lm,
-#   nodes=nrow(simulation_conditions),
-#   cpus_per_node = 1,
-#   submit = TRUE,
-#   preschedule_cores = F,
-#   slurm_options =
-#     c(account = "netlab", partition = "standard", time = "03:00:00"), # standard
-#   global_objects = lsf.str()
-# )
-# save(sjob, file = "nic_simulation_run_lm_k_fold.Rdata")
-
-
-# Load the parallel package (remember to comment out before git push)
-library(parallel)
-num_cores <- detectCores() - 2  # Use one less than the total number of cores
-simulation_list <- split(simulation_conditions, simulation_conditions$id)
-results <- mclapply(simulation_list, run_wrapper_lm, mc.cores = num_cores)
-output <- do.call(rbind, lapply(results, as.data.frame))
-saveRDS(output, file = "./res/run_lm_k_fold.RDS")
+sjob = slurm_map(
+  split(simulation_conditions, simulation_conditions$id),
+  run_wrapper,
+  nodes=nrow(simulation_conditions),
+  cpus_per_node = 1,
+  submit = TRUE,
+  preschedule_cores = F,
+  slurm_options =
+    c(account = "netlab", partition = "standard", time = "2-00:00:00"), # standard
+  global_objects = lsf.str()
+)
+save(sjob, file = "nic_simulation_run_lr_pair.Rdata")
 

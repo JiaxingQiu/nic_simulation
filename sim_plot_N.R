@@ -37,9 +37,9 @@ for(rn in c("lm","lr")){
   plot_df$ic_type <- factor(plot_df$ic_type, levels=c("NICC", "NIC","AIC","BIC"))
   levels(plot_df$ic_type) <- c("NICc","NIC","AIC","BIC")
   plot_ls[[rn]] <- ggplot(data = plot_df, aes(x = n_ttl_betas, y = ic_diff, color = ic_type)) + 
-    geom_point(size=1.5) +
-    geom_line() + 
-    geom_errorbar(aes(ymin = ic_diff_l, ymax = ic_diff_u),width=0.3) + 
+    geom_point(size=0.7) +
+    geom_line(linewidth=0.3) + 
+    geom_errorbar(aes(ymin = ic_diff_l, ymax = ic_diff_u),width=0.2) + 
     geom_hline(aes(yintercept=0)) + 
     scale_x_continuous(limits = c(min(plot_df$n_ttl_betas), max(plot_df$n_ttl_betas)), breaks = seq(min(plot_df$n_ttl_betas), max(plot_df$n_ttl_betas), 1)) +
     # coord_trans(y = "sqrt") +

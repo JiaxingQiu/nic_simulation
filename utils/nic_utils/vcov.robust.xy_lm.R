@@ -27,7 +27,7 @@ vcov.robust.xy_lm <- function(x,y,b,c){
   # sigma estimation
   s <- sqrt(1/nobs * sum( (y-p)^2 )) # check with sigma(mdl)
   
-  # calculate information matrix J [p*p] (- Hessian matrix)
+  # calculate Hessian matrix J [p*p] (- Hessian matrix)
   J <- (1/s^2) * t(x) %*% x
   
   # MLE Deviance = -2 * log likelihood

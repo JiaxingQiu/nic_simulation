@@ -82,16 +82,23 @@ run_wrapper <- function(sim_condition) {
   return(toReturn)
 }
 
-sjob = slurm_map(
-  split(simulation_conditions, simulation_conditions$id),
-  run_wrapper,
-  nodes=nrow(simulation_conditions),
-  cpus_per_node = 1,
-  submit = TRUE,
-  preschedule_cores = F,
-  slurm_options =
-    c(account = "netlab", partition = "standard", time = "2-00:00:00"), # standard
-  global_objects = lsf.str()
-)
-save(sjob, file = "nic_simulation_run_lr_k_fold.Rdata")
+# sjob = slurm_map(
+#   split(simulation_conditions, simulation_conditions$id),
+#   run_wrapper,
+#   nodes=nrow(simulation_conditions),
+#   cpus_per_node = 1,
+#   submit = TRUE,
+#   preschedule_cores = F,
+#   slurm_options =
+#     c(account = "netlab", partition = "standard", time = "2-00:00:00"), # standard
+#   global_objects = lsf.str()
+# )
+# save(sjob, file = "nic_simulation_run_lr_k_fold.Rdata")
 
+# Load the parallel package (remember to comment out before git push)
+library(parallel)
+num_cores <- detectCores() - 2  # Use one less than the total number of cores
+simulation_list <- split(simulation_conditions, simulation_conditions$id)
+results <- mclapply(simulation_list, run_wrapper, mc.cores = num_cores)
+output <- do.call(rbind, lapply(results, as.data.frame))
+saveRDS(output, file = "./res/run_lr_k_fold.RDS")
