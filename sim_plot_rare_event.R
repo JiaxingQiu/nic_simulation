@@ -38,7 +38,7 @@ p <- ggplot(data = plot_df, aes(x = n_ttl_betas, y = ic_diff, color = ic_type)) 
   geom_line(linewidth=0.2) + 
   geom_errorbar(aes(ymin = ic_diff_l, ymax = ic_diff_u),width=0.2) + 
   geom_hline(aes(yintercept=0)) + 
-  scale_x_continuous(limits = c(5, 11), breaks = seq(5, 11, 1)) +
+  scale_x_continuous(limits = c(4.55, 10.5), breaks = seq(5, 10, 1)) +
   # coord_trans(y = "sqrt") +
   facet_wrap(~ case + cluster_strength, ncol=3, nrow=2, scales="free_x") + 
   labs(subtitle="Binomial",

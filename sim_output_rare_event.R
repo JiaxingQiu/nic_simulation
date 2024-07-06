@@ -41,7 +41,7 @@ source("./sim_plot_rare_event.R")
 p <- annotate_figure(p, fig.lab = "\nC.", fig.lab.face = "bold", fig.lab.size = 12,
                      top = text_grob("\n     Rare Event", size = 12, face = "bold", x=0,hjust=0))
 
-p %>% ggsave(filename=paste0("./res/rare_event.png"), width = 7, height = 6, bg="white")
+p %>% ggsave(filename=paste0("./res/rare_event.png"), width = 6, height = 6, bg="white")
 
 
 

@@ -131,11 +131,18 @@ p_sm <- annotate_figure(p, fig.lab = "\nB.", fig.lab.face = "bold", fig.lab.size
                         top = text_grob("\n Small sample of clusters", size = 10, face = "bold", x=0,hjust=0),
                         left = text_grob("Error", size = 8, face = "bold", rot = 90), 
                         bottom = text_grob("Generating model size", size = 8, face = "bold") )
-
-
 p_spec <- ggarrange(p_na, p_sm, ncol=2, nrow=1, widths = c(2.5,3) )
 p_spec <- annotate_figure(p_spec, top = text_grob("Approximating looDeviance (special scenarios)", size = 14, face = "bold"))
 
 p_spec %>% ggsave(filename=paste0("./res/special_scenario.png"), width = 14, height = 7, bg="white")
+
+source("./sim_output_rare_event.R")
+# concat two image together
+library(magick)
+img1 <- image_read("./res/special_scenario.png")
+img2 <- image_read("./res/rare_event.png")
+combined_image <- image_append(c(img1, img2), stack = T)
+image_write(combined_image, "./res/special_scenario.png")
+
 
 

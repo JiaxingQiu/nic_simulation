@@ -32,7 +32,7 @@ source("./sim_conditions_rare.R")
 
 #This function runs each condition (i.e. each row in the simulation condition data.frame)
 # for test: 
-sim_condition = simulation_conditions[which(simulation_conditions$id==18),]
+sim_condition = simulation_conditions[which(simulation_conditions$id==33),]
 
 
 run_wrapper <- function(sim_condition) {
@@ -64,7 +64,9 @@ run_wrapper <- function(sim_condition) {
                                  sim_condition$ar1_phi,
                                  sim_condition$na_rate,
                                  family = "binomial")
-            res$p <- res$p*0.015
+            rrr <- 0.015
+            if(sim_condition$n_obs_per_cluster>50) rrr <- 0.003
+            res$p <- res$p*rrr
             res$y <- rbinom(length(res$p), 1, res$p)
             prev <- length(unique(res$c[which(res$y==1)])) / length(unique(res$c))
             print(prev)
@@ -106,6 +108,7 @@ sjob = slurm_map(
   split(simulation_conditions, simulation_conditions$id),
   run_wrapper,
   nodes=nrow(simulation_conditions),
+  jobname = "lr_rare",
   cpus_per_node = 1,
   submit = TRUE,
   preschedule_cores = F,
